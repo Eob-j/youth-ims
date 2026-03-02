@@ -8,8 +8,6 @@ import { exportData } from "@/lib/exporter/export-engine";
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const format = searchParams.get("format") as "csv" | "xlsx" | "pdf";
-
-  console.log(format);
   try {
     const result = await exportData({
       queryFn: async () => db.select().from(youthPopulation),

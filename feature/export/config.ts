@@ -17,3 +17,22 @@ export const youthPopulationExportConfig = {
 
   excludeFields: ["id", "version", "created_at", "updated_at"],
 };
+
+export const youthWithDisabilitiesExportConfig = {
+  columns: [
+    { key: "ageGroup", header: "Age Group", required: true },
+    { key: "total", header: "Total", required: true },
+    { key: "male", header: "Male", required: true },
+    { key: "female", header: "Female", required: true },
+    { key: "urban", header: "Urban", required: true },
+    { key: "rural", header: "Rural", required: true },
+    { key: "seeing", header: "Seeing", required: true },
+    { key: "hearing", header: "Hearing", required: true },
+    { key: "physical", header: "Physical", required: true },
+    { key: "learning", header: "Learning", required: true },
+    { key: "selfcare", header: "Self-care", required: true },
+    { key: "speech", header: "Speech", required: true },
+  ] as const,
+
+  excludeFields: ["id", "version", "created_at", "updated_at"],
+};
