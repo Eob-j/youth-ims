@@ -135,7 +135,7 @@ export async function deleteYouthPopulation(data: {
       return fail("Record modified by another user.");
     }
 
-    revalidatePath("/dashboard");
+    revalidatePath("/youth-population");
 
     return ok("Record deleted successfully.");
   } catch (error) {
