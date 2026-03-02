@@ -28,12 +28,42 @@ interface ImportResult {
 
 interface DataImportDialogProps {
   tableName: string;
+  serverActionHander: (data: FormData) => Promise<
+    | {
+        success: boolean;
+        error: string;
+        errors?: undefined;
+        inserted?: undefined;
+        failed?: undefined;
+      }
+    | {
+        success: boolean;
+        error: string;
+        errors: any[];
+        inserted?: undefined;
+        failed?: undefined;
+      }
+    | {
+        success: boolean;
+        inserted: number;
+        failed: number;
+        error: string;
+        errors?: undefined;
+      }
+    | {
+        success: boolean;
+        inserted: number;
+        failed: number;
+        errors: any[];
+        error?: undefined;
+      }
+  >;
   onImportComplete?: () => void;
 }
 
 export function DataImportDialog({
   tableName,
-  // importAction,
+  serverActionHander,
   onImportComplete,
 }: DataImportDialogProps) {
   const [open, setOpen] = useState(false);
@@ -76,14 +106,14 @@ export function DataImportDialog({
     formData.append("file", file);
 
     startTransition(async () => {
-      const response = await importYouthPoplationData(formData);
-      console.log(response);
+      const response = await serverActionHander(formData);
 
       if (response.success) {
         toast("Import successful", {
           description: `Inserted ${response.inserted} records`,
           richColors: true,
         });
+        setOpen(false);
         onImportComplete?.();
       } else {
         toast.error("Import Error", {

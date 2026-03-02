@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { youthPopulation } from "@/db/schema";
+import { youthPopulation, youthWithDisabilities } from "@/db/schema";
 import { ImportConfig } from "@/lib/importer/types";
 
 export const youthPopulationImportConfig: ImportConfig<any> = {
@@ -44,4 +44,39 @@ export const youthPopulationImportConfig: ImportConfig<any> = {
   }),
 };
 
+export const youthWithDisabilitiesImportConfig: ImportConfig<any> = {
+  table: youthWithDisabilities,
+
+  conflictStrategy: "error",
+
+  columns: {
+    ageGroup: { type: "required" },
+    total: { type: "required" },
+    male: { type: "required" },
+    female: { type: "required" },
+    urban: { type: "required" },
+    rural: { type: "required" },
+    seeing: { type: "required" },
+    hearing: { type: "required" },
+    physical: { type: "required" },
+    learning: { type: "required" },
+    selfcare: { type: "required" },
+    speech: { type: "required" },
+  },
+
+  schema: z.object({
+    ageGroup: z.string(),
+    total: z.int(),
+    male: z.int(),
+    female: z.int(),
+    urban: z.int(),
+    rural: z.int(),
+    seeing: z.int(),
+    hearing: z.int(),
+    physical: z.int(),
+    learning: z.int(),
+    selfcare: z.int(),
+    speech: z.int(),
+  }),
+};
 // todo implement a more robust validation for this youth import config
