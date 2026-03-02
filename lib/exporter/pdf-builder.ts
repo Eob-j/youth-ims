@@ -1,4 +1,4 @@
-import PDFDocument from "pdfkit";
+import PDFDocument from "pdfkit/js/pdfkit.standalone";
 
 export async function buildPdf(
   headers: string[],
@@ -12,45 +12,65 @@ export async function buildPdf(
       });
 
       const buffers: Buffer[] = [];
-      doc.on("data", buffers.push.bind(buffers));
+      doc.on("data", (chunk) => buffers.push(chunk));
       doc.on("end", () => resolve(Buffer.concat(buffers)));
       doc.on("error", reject);
 
-      const pageWidth =
-        doc.page.width - doc.page.margins.left - doc.page.margins.right;
+      const margins = doc.page.margins;
+      const pageWidth = doc.page.width - margins.left - margins.right;
 
       const columnWidth = pageWidth / headers.length;
-      let y = doc.y;
 
       // Title
       doc.fontSize(16).text("Report", { align: "left" });
       doc.moveDown();
+      let y = doc.y;
 
       // Header Row
       doc.fontSize(10).font("Helvetica-Bold");
 
+      let maxHeaderHeight = 0;
+      headers.forEach((header) => {
+        const height = doc.heightOfString(header, {
+          width: columnWidth,
+          align: "left",
+        });
+        maxHeaderHeight = Math.max(maxHeaderHeight, height);
+      });
+
       headers.forEach((header, i) => {
-        doc.text(header, doc.page.margins.left + i * columnWidth, y, {
+        doc.text(header, margins.left + i * columnWidth, y, {
           width: columnWidth,
           align: "left",
         });
       });
 
-      y += 20;
+      y += maxHeaderHeight + 10;
 
       doc.font("Helvetica");
 
       // Rows
       for (const row of rows) {
-        if (y > doc.page.height - 50) {
+        let maxRowHeight = 0;
+        row.forEach((cell) => {
+          const cellText =
+            cell !== null && cell !== undefined ? String(cell) : "";
+          const height = doc.heightOfString(cellText, {
+            width: columnWidth,
+            align: "left",
+          });
+          maxRowHeight = Math.max(maxRowHeight, height);
+        });
+
+        if (y + maxRowHeight > doc.page.height - margins.bottom) {
           doc.addPage();
-          y = doc.y;
+          y = margins.top;
         }
 
         row.forEach((cell, i) => {
           doc.text(
             cell !== null && cell !== undefined ? String(cell) : "",
-            doc.page.margins.left + i * columnWidth,
+            margins.left + i * columnWidth,
             y,
             {
               width: columnWidth,
@@ -59,7 +79,7 @@ export async function buildPdf(
           );
         });
 
-        y += 18;
+        y += maxRowHeight + 10;
       }
 
       doc.end();
