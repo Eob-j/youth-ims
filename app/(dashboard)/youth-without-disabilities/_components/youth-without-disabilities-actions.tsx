@@ -5,16 +5,16 @@ import { useYouthWithoutDisabilitiesStore } from "@/store/youth-without-disabili
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
-// import { importYouthWithoutDisabilitiesData } from "@/feature/import-csv/action";
+import { importYouthWithoutDisabilitiesData } from "@/feature/import-csv/action";
 
 export function YouthWithoutDisabilitiesActions() {
   const { createOpen, setCreateOpen } = useYouthWithoutDisabilitiesStore();
   return (
     <div className="flex gap-2">
-      {/* <DataImportDialog
+      <DataImportDialog
         tableName="youth_without_disabilities"
         serverActionHander={importYouthWithoutDisabilitiesData}
-      /> */}
+      />
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogTrigger asChild>
           <Button className="flex items-center gap-1" variant="default">

@@ -36,3 +36,16 @@ export const youthWithDisabilitiesExportConfig = {
 
   excludeFields: ["id", "version", "created_at", "updated_at"],
 };
+
+export const youthWithoutDisabilitiesExportConfig = {
+  columns: [
+    { key: "ageGroup", header: "Age Group", required: true },
+    { key: "total", header: "Total", required: true },
+    { key: "male", header: "Male", required: true },
+    { key: "female", header: "Female", required: true },
+    { key: "urban", header: "Urban", required: true },
+    { key: "rural", header: "Rural", required: true },
+  ] as const,
+
+  excludeFields: ["id", "version", "created_at", "updated_at"],
+};
