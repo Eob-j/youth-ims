@@ -1,5 +1,7 @@
 import { z } from "zod";
 import {
+  humanTrafficking,
+  youthMigration,
   youthPopulation,
   youthWithDisabilities,
   youthWithoutDisabilities,
@@ -106,5 +108,53 @@ export const youthWithoutDisabilitiesImportConfig: ImportConfig<any> = {
     female: z.int(),
     urban: z.int(),
     rural: z.int(),
+  }),
+};
+
+export const humanTraffickingImportConfig: ImportConfig<any> = {
+  table: humanTrafficking,
+
+  conflictStrategy: "error",
+
+  columns: {
+    lga: { type: "required" },
+    year: { type: "required" },
+    total: { type: "required" },
+    male: { type: "required" },
+    female: { type: "required" },
+    ageGroup: { type: "required" },
+  },
+
+  schema: z.object({
+    lga: z.string(),
+    year: z.int(),
+    total: z.int(),
+    male: z.int(),
+    female: z.int(),
+    ageGroup: z.string(),
+  }),
+};
+
+export const youthMigrationImportConfig: ImportConfig<any> = {
+  table: youthMigration,
+
+  conflictStrategy: "error",
+
+  columns: {
+    year: { type: "required" },
+    total: { type: "required" },
+    male: { type: "required" },
+    female: { type: "required" },
+    origin: { type: "required" },
+    destination: { type: "required" },
+  },
+
+  schema: z.object({
+    year: z.int(),
+    total: z.int(),
+    male: z.int(),
+    female: z.int(),
+    origin: z.string(),
+    destination: z.string(),
   }),
 };

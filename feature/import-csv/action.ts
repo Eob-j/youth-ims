@@ -2,6 +2,8 @@
 
 import { importSpreadsheet } from "@/lib/importer/import-engine";
 import {
+  humanTraffickingImportConfig,
+  youthMigrationImportConfig,
   youthPopulationImportConfig,
   youthWithDisabilitiesImportConfig,
   youthWithoutDisabilitiesImportConfig,
@@ -34,5 +36,25 @@ export async function importYouthWithoutDisabilitiesData(formData: FormData) {
     file,
     config: youthWithoutDisabilitiesImportConfig,
     path: "/youth-without-disabilities",
+  });
+}
+
+export async function importHumanTraffickingData(formData: FormData) {
+  const file = formData.get("file") as File;
+
+  return importSpreadsheet({
+    file,
+    config: humanTraffickingImportConfig,
+    path: "/human-trafficking",
+  });
+}
+
+export async function importYouthMigrationData(formData: FormData) {
+  const file = formData.get("file") as File;
+
+  return importSpreadsheet({
+    file,
+    config: youthMigrationImportConfig,
+    path: "/youth-migration",
   });
 }

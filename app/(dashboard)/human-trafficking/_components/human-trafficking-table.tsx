@@ -62,7 +62,7 @@ export function HumanTraffickingTable({
         searchKey="ageGroup"
         enableRowSelection={canEditData}
         onBulkDelete={handleBulkDelete}
-        exportRoute="youth-without-disabilities"
+        exportRoute="human-trafficking"
       />
 
       <HumanTraffickingDialogs />

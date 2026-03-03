@@ -49,3 +49,28 @@ export const youthWithoutDisabilitiesExportConfig = {
 
   excludeFields: ["id", "version", "created_at", "updated_at"],
 };
+
+export const humanTraffickingExportConfig = {
+  columns: [
+    { key: "lga", header: "LGA", required: true },
+    { key: "year", header: "Year", required: true },
+    { key: "total", header: "Total", required: true },
+    { key: "male", header: "Male", required: true },
+    { key: "female", header: "Female", required: true },
+  ] as const,
+
+  excludeFields: ["id", "version", "created_at", "updated_at"],
+};
+
+export const youthMigrationExportConfig = {
+  columns: [
+    { key: "year", header: "Year", required: true },
+    { key: "total", header: "Total", required: true },
+    { key: "male", header: "Male", required: true },
+    { key: "female", header: "Female", required: true },
+    { key: "origin", header: "Origin", required: true },
+    { key: "destination", header: "Destination", required: true },
+  ] as const,
+
+  excludeFields: ["id", "version", "created_at", "updated_at"],
+};
