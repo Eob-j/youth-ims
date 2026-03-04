@@ -11,19 +11,7 @@ export async function getUsers() {
     redirect("/login");
   }
   const res = await auth.api.listUsers({
-    query: {
-      searchValue: "some name",
-      searchField: "name",
-      searchOperator: "contains",
-      limit: 100,
-      offset: 100,
-      sortBy: "name",
-      sortDirection: "desc",
-      filterField: "email",
-      filterValue: "hello@example.com",
-      filterOperator: "eq",
-    },
-    // This endpoint requires session cookies.
+    query: {},
     headers: await headers(),
   });
   return res.users;

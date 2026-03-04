@@ -1,6 +1,7 @@
 "use client";
 
 import { userType } from "@/auth-schema";
+import { RoleBadge } from "@/components/role-badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -37,16 +38,20 @@ export const getColumns = ({
       accessorKey: "role",
       header: "Role",
       cell: ({ row }) => {
-        const date = new Date(row.getValue("created_at"));
-        return date.toLocaleDateString();
+        const role = row.getValue("role") as "admin" | "data_entry" | "viewer";
+        return <RoleBadge role={role} />;
       },
     },
     {
-      accessorKey: "created_at",
+      accessorKey: "createdAt",
       header: "Creation Date",
       cell: ({ row }) => {
-        const date = new Date(row.getValue("created_at"));
-        return date.toLocaleDateString();
+        const date = new Date(row.getValue("createdAt"));
+        return date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
       },
     },
   ];

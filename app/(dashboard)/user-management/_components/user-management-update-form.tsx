@@ -9,14 +9,11 @@ import {
   Select,
   SelectContent,
   SelectItem,
-  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import type { userSchemaType } from "@/lib/validations/user-management";
-import { youthWithoutDisabilitiesSchema } from "@/lib/validations/youth-without-disablilties";
 import { Controller, useFormContext } from "react-hook-form";
-import z from "zod";
 
 const roleOptions = [
   { label: "Administrator - Full Access", value: "admin" },
@@ -24,7 +21,7 @@ const roleOptions = [
   { label: "Viewer - View Data Only", value: "viewer" },
 ];
 
-export function UserManagementForm() {
+export function UserManagementUpdateForm() {
   const { control } = useFormContext<userSchemaType>();
   return (
     <div className="grid gap-4">
@@ -89,43 +86,6 @@ export function UserManagementForm() {
                 ))}
               </SelectContent>
             </Select>
-          </Field>
-        )}
-      />
-
-      <Controller
-        name="password"
-        control={control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="password">Password</FieldLabel>
-            <Input
-              {...field}
-              id="password"
-              type="password"
-              onChange={(e) => field.onChange(e.target.value)}
-            />
-            {fieldState.error && (
-              <FieldError>{fieldState.error.message}</FieldError>
-            )}
-          </Field>
-        )}
-      />
-      <Controller
-        name="confirmPassword"
-        control={control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-            <Input
-              {...field}
-              id="confirmPassword"
-              type="password"
-              onChange={(e) => field.onChange(e.target.value)}
-            />
-            {fieldState.error && (
-              <FieldError>{fieldState.error.message}</FieldError>
-            )}
           </Field>
         )}
       />
