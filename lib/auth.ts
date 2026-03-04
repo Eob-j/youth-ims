@@ -5,7 +5,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin as adminPlugin } from "better-auth/plugins/admin";
 import { nextCookies } from "better-auth/next-js";
 
-import { ac, admin, dataEntry, viewer } from "./permissions";
+import { ac, admin, data_entry, viewer } from "./permissions";
 
 import { VerifyEmail } from "@/components/emails/verify-email";
 import { env } from "@/env";
@@ -54,7 +54,7 @@ export const auth = betterAuth({
   plugins: [
     adminPlugin({
       ac,
-      roles: { admin, dataEntry, viewer },
+      roles: { admin, data_entry, viewer },
       defaultRole: "viewer" as const,
     }),
     nextCookies(),

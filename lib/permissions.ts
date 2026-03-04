@@ -13,7 +13,7 @@ export const admin = ac.newRole({
   data: ["create", "view", "update", "delete", "list"],
 });
 
-export const dataEntry = ac.newRole({
+export const data_entry = ac.newRole({
   data: ["create", "view", "update", "delete", "list"],
   user: [],
   session: [],

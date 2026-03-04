@@ -2,7 +2,7 @@ import { createAuthClient } from "better-auth/react";
 import { inferAdditionalFields, adminClient } from "better-auth/client/plugins";
 import { env } from "@/env";
 import type { auth } from "./auth";
-import { ac, admin, dataEntry, viewer } from "./permissions";
+import { ac, admin, data_entry, viewer } from "./permissions";
 
 export const authClient = createAuthClient({
   baseURL: env.NEXT_PUBLIC_BETTER_AUTH_URL,
@@ -12,7 +12,7 @@ export const authClient = createAuthClient({
       ac,
       roles: {
         admin,
-        dataEntry,
+        data_entry,
         viewer,
       },
     }),
