@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
+import { auth } from "./lib/auth";
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
@@ -12,7 +13,7 @@ export const users = pgTable("users", {
     .defaultNow()
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
-  role: text("role"),
+  role: text("role").notNull(),
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
@@ -96,3 +97,5 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
     references: [users.id],
   }),
 }));
+
+export type userType = typeof auth.$Infer.Session.user;
