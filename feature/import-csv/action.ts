@@ -3,6 +3,7 @@
 import { importSpreadsheet } from "@/lib/importer/import-engine";
 import {
   humanTraffickingImportConfig,
+  nediProgramsImportConfig,
   youthMigrationImportConfig,
   youthPopulationImportConfig,
   youthWithDisabilitiesImportConfig,
@@ -56,5 +57,15 @@ export async function importYouthMigrationData(formData: FormData) {
     file,
     config: youthMigrationImportConfig,
     path: "/youth-migration",
+  });
+}
+
+export async function importNediProgramsData(formData: FormData) {
+  const file = formData.get("file") as File;
+
+  return importSpreadsheet({
+    file,
+    config: nediProgramsImportConfig,
+    path: "/nedi-programs",
   });
 }

@@ -51,7 +51,6 @@ export async function importSpreadsheet<T>({
 
     // 3️⃣ Validate
     const parsed = config.schema.safeParse(normalized);
-
     if (!parsed.success) {
       errors.push({
         row: i + 2,
@@ -64,6 +63,7 @@ export async function importSpreadsheet<T>({
   }
 
   if (!validRows.length) {
+    console.error("No valid rows found", errors);
     return {
       success: false,
       error: "No valid rows found",
@@ -87,7 +87,7 @@ export async function importSpreadsheet<T>({
       error instanceof DrizzleQueryError &&
       error.cause?.message.includes("duplicate")
     ) {
-      err = "Duplicate LGA and year entry.";
+      err = "Duplicate entries found. Please check the data and try again.";
     }
     return {
       success: false,

@@ -72,6 +72,12 @@ export function DataImportDialog({
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const reset = () => {
+    setFile(null);
+    setResult(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
@@ -114,6 +120,7 @@ export function DataImportDialog({
           richColors: true,
         });
         setOpen(false);
+        reset();
         onImportComplete?.();
       } else {
         toast.error("Import Error", {
@@ -121,12 +128,6 @@ export function DataImportDialog({
         });
       }
     });
-  };
-
-  const reset = () => {
-    setFile(null);
-    setResult(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (

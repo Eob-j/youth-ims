@@ -74,3 +74,23 @@ export const youthMigrationExportConfig = {
 
   excludeFields: ["id", "version", "created_at", "updated_at"],
 };
+
+export const nediProgramsExportConfig = {
+  columns: [
+    { key: "programName", header: "Program Name", required: true },
+    { key: "targetGroup", header: "Target Group", required: true },
+    { key: "beneficiaries", header: "Beneficiaries", required: true },
+    { key: "serviceType", header: "Service Type", required: true },
+    { key: "description", header: "Description", required: true },
+    { key: "status", header: "Status", required: true },
+    { key: "location", header: "Location", required: true },
+    { key: "maleParticipants", header: "Male Participants" },
+    { key: "femaleParticipants", header: "Female Participants" },
+    { key: "startDate", header: "Start Date", required: true },
+    { key: "endDate", header: "End Date" },
+    { key: "implementingPartner", header: "Implementing Partner" },
+    { key: "fundingSource", header: "Funding Source" },
+  ] as const,
+
+  excludeFields: [],
+};

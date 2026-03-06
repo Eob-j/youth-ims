@@ -9,6 +9,7 @@ export type ColumnType =
 export type ColumnDefinition<T = any> = {
   type: ColumnType;
   compute?: (row: any, context?: any) => any;
+  transform?: (value: any) => any;
 };
 
 export type ImportConfig<T> = {

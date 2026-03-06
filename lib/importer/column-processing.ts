@@ -29,12 +29,18 @@ export function processColumns(
     }
   }
 
+  // Apply per-column transforms to incoming CSV values (or computed values)
+  for (const [key, column] of Object.entries(config.columns)) {
+    if (column.transform && processed[key] !== undefined) {
+      processed[key] = column.transform(processed[key]);
+    }
+  }
+
   // Remove computed-only columns from raw input
   for (const [key, column] of Object.entries(config.columns)) {
     if (column.type === "computed") {
       delete processed[key];
     }
   }
-
   return processed;
 }

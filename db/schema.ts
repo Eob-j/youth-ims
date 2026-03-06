@@ -1,8 +1,10 @@
 import { sql } from "drizzle-orm";
 import {
   check,
+  date,
   decimal,
   integer,
+  pgEnum,
   pgTable,
   serial,
   timestamp,
@@ -293,63 +295,49 @@ export const piaStudents = pgTable(
   ],
 );
 
-// export const nediPrograms = pgTable(
-//   "nedi_programs",
-//   {
-//     id: serial("id").primaryKey(),
-//     programName: varchar("program_name", { length: 255 }).notNull(),
+export const statusEnum = pgEnum("status", [
+  "Planned",
+  "Ongoing",
+  "Completed",
+  "Operational",
+]);
 
-//     targetGroup: varchar("target_group", { length: 255 }).notNull(),
-
-//     beneficiaries: integer("beneficiaries").notNull(),
-
-//     serviceType: varchar("service_type", { length: 255 }).notNull(),
-
-//     description: varchar("description", { length: 1000 }).notNull(),
-
-//     status: varchar("status", { length: 50 }).notNull(),
-
-//     location: varchar("location", { length: 255 }).notNull(),
-
-//     maleParticipants: integer("male_participants"),
-//     femaleParticipants: integer("female_participants"),
-
-//     startDate: varchar("start_date", { length: 50 }).notNull(),
-//     endDate: varchar("end_date", { length: 50 }),
-
-//     implementingPartner: varchar("implementing_partner", {
-//       length: 255,
-//     }),
-
-//     fundingSource: varchar("funding_source", {
-//       length: 255,
-//     }),
-
-//     version: integer("version").notNull().default(1),
-//     ...timestamps,
-//   },
-//   (table) => [
-//     // Logical uniqueness of a program instance
-//     uniqueIndex("nedi_unique_program_instance").on(
-//       table.programName,
-//       table.startDate,
-//       table.location,
-//     ),
-
-//     // Prevent negative values
-//     check(
-//       "nedi_non_negative_check",
-//       sql`
-//           beneficiaries >= 0 AND
-//           (male_participants IS NULL OR male_participants >= 0) AND
-//           (female_participants IS NULL OR female_participants >= 0)
-//         `,
-//     ),
-//   ],
-// );
+export const nediPrograms = pgTable(
+  "nedi_programs",
+  {
+    id: serial("id").primaryKey(),
+    programName: varchar("program_name", { length: 255 }).notNull(),
+    targetGroup: varchar("target_group", { length: 255 }).notNull(),
+    beneficiaries: integer("beneficiaries"),
+    serviceType: varchar("service_type", { length: 255 }).notNull(),
+    description: varchar("description", { length: 1000 }).notNull(),
+    status: statusEnum().notNull(),
+    location: varchar("location", { length: 255 }).notNull(),
+    maleParticipants: integer("male_participants"),
+    femaleParticipants: integer("female_participants"),
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date"),
+    implementingPartner: varchar("implementing_partner", {
+      length: 255,
+    }).notNull(),
+    fundingSource: varchar("funding_source", {
+      length: 255,
+    }).notNull(),
+    version: integer("version").notNull().default(1),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex("nedi_unique_program_instance").on(
+      table.programName,
+      table.startDate,
+      table.location,
+    ),
+  ],
+);
 
 export type SportsFinancingType = typeof sportsFinancing.$inferSelect;
 export type PiaStudentsType = typeof piaStudents.$inferSelect;
+export type NediProgramsType = typeof nediPrograms.$inferSelect;
 
 export type YouthMigrationType = typeof youthMigration.$inferSelect;
 export type HumanTraffickingType = typeof humanTrafficking.$inferSelect;
