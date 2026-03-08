@@ -126,8 +126,7 @@ function NyssProgramsEditDialog() {
   const form = useForm<z.infer<typeof NyssProgramsUpdateSchema>>({
     resolver: zodResolver(NyssProgramsUpdateSchema),
     defaultValues: {
-      id: selectedItem?.id ?? 0,
-      version: selectedItem?.version ?? 0,
+      id: selectedItem?.id,
       programName: selectedItem?.programName ?? "",
       institution: selectedItem?.institution ?? "",
       year: String(selectedItem?.year ?? ""),

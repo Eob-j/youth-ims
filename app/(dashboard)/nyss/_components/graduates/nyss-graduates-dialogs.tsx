@@ -142,8 +142,6 @@ function NyssGraduatesEditDialog() {
     },
   });
 
-  console.log(form.formState.errors);
-
   async function onSubmit(data: z.infer<typeof NyssGraduatesUpdateSchema>) {
     const res = await updateNyssGraduate({
       id: data.id,
