@@ -383,11 +383,44 @@ export const nyssGraduates = pgTable(
   ],
 );
 
+export const indicatorData = pgTable(
+  "indicator_data",
+  {
+    id: serial("id").primaryKey(),
+    organization: varchar("organization", { length: 1000 }).notNull(),
+    indicator: varchar("indicator", { length: 1000 }).notNull(),
+    year: integer("year").notNull(),
+    region: varchar("region", { length: 100 }).notNull(),
+    male: integer("male").notNull(),
+    female: integer("female").notNull(),
+    total: integer("total").notNull(),
+    referenceSource: varchar("reference_source", { length: 1000 }).notNull(),
+    category: varchar("category", { length: 1000 }).notNull(),
+    version: integer("version").notNull().default(1),
+    ...timestamps,
+  },
+  (table) => [
+    check(
+      "indicator_data_non_negative_check",
+      sql`
+      ${table.male} >= 0 AND
+      ${table.female} >= 0 AND
+      ${table.total} >= 0
+    `,
+    ),
+    check(
+      "indicator_data_total_sum_check",
+      sql`${table.male} + ${table.female} = ${table.total}`,
+    ),
+  ],
+);
+
 export type SportsFinancingType = typeof sportsFinancing.$inferSelect;
 export type PiaStudentsType = typeof piaStudents.$inferSelect;
 export type NediProgramsType = typeof nediPrograms.$inferSelect;
 export type NyssProgramsType = typeof nyssPrograms.$inferSelect;
 export type NyssGraduatesType = typeof nyssGraduates.$inferSelect;
+export type IndicatorDataType = typeof indicatorData.$inferSelect;
 
 export type YouthMigrationType = typeof youthMigration.$inferSelect;
 export type HumanTraffickingType = typeof humanTrafficking.$inferSelect;

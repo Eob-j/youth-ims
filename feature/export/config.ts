@@ -125,3 +125,19 @@ export const nyssGraduatesExportConfig = {
 
   excludeFields: [],
 };
+
+export const indicatorDataExportConfig = {
+  columns: [
+    { key: "organization", header: "Organization", required: true },
+    { key: "indicator", header: "Indicator", required: true },
+    { key: "year", header: "Year", required: true },
+    { key: "region", header: "Region", required: true },
+    { key: "category", header: "Category", required: true },
+    { key: "male", header: "Male", required: true },
+    { key: "female", header: "Female", required: true },
+    { key: "total", header: "Total", required: true },
+    { key: "referenceSource", header: "Reference Source", required: true },
+  ] as const,
+
+  excludeFields: ["created_at", "updated_at"],
+};

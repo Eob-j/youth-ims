@@ -11,6 +11,7 @@ import {
   youthWithDisabilitiesImportConfig,
   youthWithoutDisabilitiesImportConfig,
 } from "./config";
+import { importIndicatorData as importIndicatorDataAction } from "@/server/actions/indicator-data";
 
 export async function importYouthPoplationData(formData: FormData) {
   const file = formData.get("file") as File;
@@ -90,4 +91,8 @@ export async function importNyssGraduatesData(formData: FormData) {
     config: nyssGraduatesImportConfig,
     path: "/nyss",
   });
+}
+
+export async function importIndicatorData(formData: FormData) {
+  return importIndicatorDataAction(formData);
 }
