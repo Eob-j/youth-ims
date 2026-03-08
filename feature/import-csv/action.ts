@@ -12,6 +12,7 @@ import {
   youthWithoutDisabilitiesImportConfig,
 } from "./config";
 import { importIndicatorData as importIndicatorDataAction } from "@/server/actions/indicator-data";
+import { importNscParticipantsData as importNscParticipantsDataAction } from "@/server/actions/nsc-participants";
 
 export async function importYouthPoplationData(formData: FormData) {
   const file = formData.get("file") as File;
@@ -95,4 +96,8 @@ export async function importNyssGraduatesData(formData: FormData) {
 
 export async function importIndicatorData(formData: FormData) {
   return importIndicatorDataAction(formData);
+}
+
+export async function importNscParticipantsData(formData: FormData) {
+  return importNscParticipantsDataAction(formData);
 }

@@ -141,3 +141,21 @@ export const indicatorDataExportConfig = {
 
   excludeFields: ["created_at", "updated_at"],
 };
+
+export const nscParticipantsExportConfig = {
+  columns: [
+    { key: "name", header: "Name", required: true },
+    { key: "age", header: "Age", required: true },
+    { key: "gender", header: "Gender", required: true },
+    { key: "region", header: "Region", required: true },
+    { key: "category", header: "Category", required: true },
+    { key: "sport", header: "Sport", required: true },
+    { key: "level", header: "Level", required: true },
+    { key: "status", header: "Status", required: true },
+    { key: "achievements", header: "Achievements" },
+    { key: "dateRegistered", header: "Date Registered", required: true },
+    { key: "contact", header: "Contact" },
+  ] as const,
+
+  excludeFields: ["id", "version", "created_at", "updated_at"],
+};

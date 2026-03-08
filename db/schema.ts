@@ -254,6 +254,36 @@ export const sportsFinancing = pgTable(
   ],
 );
 
+export const nscGenderEnum = pgEnum("nsc_gender", ["Male", "Female"]);
+export const nscStatusEnum = pgEnum("nsc_status", [
+  "Active",
+  "Inactive",
+  "Retired",
+]);
+
+export const nscParticipants = pgTable(
+  "nsc_participants",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 255 }).notNull(),
+    age: integer("age").notNull().default(0),
+    gender: nscGenderEnum().notNull(),
+    region: varchar("region", { length: 100 }).notNull(),
+    category: varchar("category", { length: 100 }).notNull(),
+    sport: varchar("sport", { length: 150 }).notNull(),
+    level: varchar("level", { length: 100 }).notNull(),
+    status: nscStatusEnum().notNull().default("Active"),
+    achievements: varchar("achievements", { length: 2000 }),
+    dateRegistered: date("date_registered").notNull(),
+    contact: varchar("contact", { length: 255 }),
+    version: integer("version").notNull().default(1),
+    ...timestamps,
+  },
+  (table) => [
+    check("nsc_participants_age_non_negative_check", sql`${table.age} >= 0`),
+  ],
+);
+
 export const piaStudents = pgTable(
   "pia_students",
   {
@@ -416,6 +446,7 @@ export const indicatorData = pgTable(
 );
 
 export type SportsFinancingType = typeof sportsFinancing.$inferSelect;
+export type NscParticipantsType = typeof nscParticipants.$inferSelect;
 export type PiaStudentsType = typeof piaStudents.$inferSelect;
 export type NediProgramsType = typeof nediPrograms.$inferSelect;
 export type NyssProgramsType = typeof nyssPrograms.$inferSelect;

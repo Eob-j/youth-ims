@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   humanTrafficking,
   nediPrograms,
+  nscParticipants,
   nyssGraduates,
   nyssPrograms,
   youthMigration,
@@ -389,5 +390,69 @@ export const nyssGraduatesImportConfig: ImportConfig<any> = {
     graduationYear: z.string().min(1),
     employmentStatus: z.string().min(1),
     sector: z.string().min(1),
+  }),
+};
+
+export const nscParticipantsImportConfig: ImportConfig<any> = {
+  table: nscParticipants,
+  conflictStrategy: "error",
+  columns: {
+    name: {
+      type: "required",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    age: {
+      type: "required",
+      transform: normalizeInt,
+    },
+    gender: {
+      type: "required",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    region: {
+      type: "required",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    category: {
+      type: "required",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    sport: {
+      type: "required",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    level: {
+      type: "required",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    status: {
+      type: "required",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    achievements: {
+      type: "optional",
+      transform: (value) => String(value ?? "").trim() || null,
+    },
+    dateRegistered: {
+      type: "required",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    contact: {
+      type: "optional",
+      transform: (value) => String(value ?? "").trim() || null,
+    },
+  },
+  schema: z.object({
+    name: z.string().min(1),
+    age: z.number().int(),
+    gender: z.string().min(1),
+    region: z.string().min(1),
+    category: z.string().min(1),
+    sport: z.string().min(1),
+    level: z.string().min(1),
+    status: z.string().min(1),
+    achievements: z.string().nullable().optional(),
+    dateRegistered: z.string().min(1),
+    contact: z.string().nullable().optional(),
   }),
 };
