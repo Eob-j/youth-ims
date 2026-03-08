@@ -4,6 +4,7 @@ import {
   nediPrograms,
   nycParticipants,
   nscParticipants,
+  nycActivities,
   nyssGraduates,
   nyssPrograms,
   youthMigration,
@@ -519,5 +520,64 @@ export const nycParticipantsImportConfig: ImportConfig<any> = {
     achievements: z.string().nullable().optional(),
     dateRegistered: z.string().min(1),
     contact: z.string().nullable().optional(),
+  }),
+};
+
+export const nycActivitiesImportConfig: ImportConfig<any> = {
+  table: nycActivities,
+  conflictStrategy: "error",
+  columns: {
+    activityName: {
+      type: "required",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    category: {
+      type: "required",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    region: {
+      type: "required",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    year: {
+      type: "required",
+      transform: normalizeInt,
+    },
+    beneficiaries: {
+      type: "required",
+      transform: normalizeInt,
+    },
+    male: {
+      type: "required",
+      transform: normalizeInt,
+    },
+    female: {
+      type: "required",
+      transform: normalizeInt,
+    },
+    fundingPartner: {
+      type: "required",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    description: {
+      type: "required",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    status: {
+      type: "required",
+      transform: normalizeStatus,
+    },
+  },
+  schema: z.object({
+    activityName: z.string().min(1),
+    category: z.string().min(1),
+    region: z.string().min(1),
+    year: z.number().int(),
+    beneficiaries: z.number().int(),
+    male: z.number().int(),
+    female: z.number().int(),
+    fundingPartner: z.string().min(1),
+    description: z.string().min(1),
+    status: z.enum(["Planned", "Ongoing", "Completed"]),
   }),
 };

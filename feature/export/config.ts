@@ -177,3 +177,20 @@ export const nycParticipantsExportConfig = {
 
   excludeFields: ["id", "version", "created_at", "updated_at"],
 };
+
+export const nycActivitiesExportConfig = {
+  columns: [
+    { key: "activityName", header: "Activity Name", required: true },
+    { key: "category", header: "Category", required: true },
+    { key: "region", header: "Region", required: true },
+    { key: "year", header: "Year", required: true },
+    { key: "beneficiaries", header: "Beneficiaries", required: true },
+    { key: "male", header: "Male", required: true },
+    { key: "female", header: "Female", required: true },
+    { key: "fundingPartner", header: "Funding Partner", required: true },
+    { key: "description", header: "Description", required: true },
+    { key: "status", header: "Status", required: true },
+  ] as const,
+
+  excludeFields: ["id", "version", "created_at", "updated_at"],
+};

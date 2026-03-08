@@ -307,6 +307,41 @@ export const nycParticipants = pgTable(
   ],
 );
 
+export const nycActivitiesStatusEnum = pgEnum("nyc_activities_status", [
+  "Completed",
+  "Ongoing",
+  "Planned",
+]);
+
+export const nycActivities = pgTable(
+  "nyc_activities",
+  {
+    id: serial("id").primaryKey(),
+    activityName: varchar("activity_name", { length: 255 }).notNull(),
+    category: varchar("category", { length: 150 }).notNull(),
+    region: varchar("region", { length: 100 }).notNull(),
+    year: integer("year").notNull(),
+    beneficiaries: integer("beneficiaries").notNull().default(0),
+    male: integer("male").notNull().default(0),
+    female: integer("female").notNull().default(0),
+    fundingPartner: varchar("funding_partner", { length: 255 }).notNull(),
+    description: varchar("description", { length: 2000 }).notNull(),
+    status: nycActivitiesStatusEnum().notNull().default("Planned"),
+    version: integer("version").notNull().default(1),
+    ...timestamps,
+  },
+  (table) => [
+    check(
+      "nyc_activities_non_negative_check",
+      sql`
+        ${table.beneficiaries} >= 0 AND
+        ${table.male} >= 0 AND
+        ${table.female} >= 0
+      `,
+    ),
+  ],
+);
+
 export const piaStudents = pgTable(
   "pia_students",
   {
@@ -471,6 +506,7 @@ export const indicatorData = pgTable(
 export type SportsFinancingType = typeof sportsFinancing.$inferSelect;
 export type NscParticipantsType = typeof nscParticipants.$inferSelect;
 export type NycParticipantsType = typeof nycParticipants.$inferSelect;
+export type NycActivitiesType = typeof nycActivities.$inferSelect;
 export type PiaStudentsType = typeof piaStudents.$inferSelect;
 export type NediProgramsType = typeof nediPrograms.$inferSelect;
 export type NyssProgramsType = typeof nyssPrograms.$inferSelect;

@@ -14,6 +14,7 @@ import {
 import { importIndicatorData as importIndicatorDataAction } from "@/server/actions/indicator-data";
 import { importNycParticipantsData as importNycParticipantsDataAction } from "@/server/actions/nyc-participants";
 import { importNscParticipantsData as importNscParticipantsDataAction } from "@/server/actions/nsc-participants";
+import { importNycActivitiesData as importNycActivitiesDataAction } from "@/server/actions/nyc-activities";
 
 export async function importYouthPoplationData(formData: FormData) {
   const file = formData.get("file") as File;
@@ -105,4 +106,8 @@ export async function importNscParticipantsData(formData: FormData) {
 
 export async function importNycParticipantsData(formData: FormData) {
   return importNycParticipantsDataAction(formData);
+}
+
+export async function importNycActivitiesData(formData: FormData) {
+  return importNycActivitiesDataAction(formData);
 }
