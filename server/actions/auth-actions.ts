@@ -1,5 +1,6 @@
 "use server";
 
+import { fail, ok } from "@/lib/action-result-helper";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -66,4 +67,11 @@ export const signUp = async (
       message: e.message || "An unknown error occurred.",
     };
   }
+};
+
+export const signOut = async () => {
+  await auth.api.signOut({
+    headers: await headers(),
+  });
+  redirect("/login");
 };

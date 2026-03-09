@@ -15,23 +15,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { RoleBadge } from "./role-badge";
+import { signOut } from "@/server/actions/auth-actions";
 
 type CurrentUser = (typeof authClient.$Infer)["Session"]["user"];
 
 export function UserProfile({ currentUser }: { currentUser: CurrentUser }) {
   const router = useRouter();
-
   async function handleLogout() {
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          router.push("/login"); // redirect to login page
-        },
-        onError: (error) => {
-          toast.error("Error logging out, please try again.");
-        },
-      },
-    });
+    await signOut();
   }
 
   const getInitials = (name: string) => {

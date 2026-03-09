@@ -11,7 +11,6 @@ interface Props {
 
 export async function UserManagementWrapper({ canEditData }: Props) {
   const data = await getUsers();
-  // console.log(data);
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-6">
