@@ -9,14 +9,11 @@ import {
   Select,
   SelectContent,
   SelectItem,
-  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import type { userSchemaType } from "@/lib/validations/user-management";
-import { youthWithoutDisabilitiesSchema } from "@/lib/validations/youth-without-disablilties";
 import { Controller, useFormContext } from "react-hook-form";
-import z from "zod";
 
 const roleOptions = [
   { label: "Administrator - Full Access", value: "admin" },

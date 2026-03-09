@@ -1,8 +1,9 @@
 import { Badge } from "@/components/ui/badge";
+import { Role } from "@/lib/types";
 import { Shield, Edit, Eye } from "lucide-react";
 
 interface RoleBadgeProps {
-  role: "admin" | "data-entry" | "data_entry" | "dataEntry" | "viewer";
+  role: Role;
   className?: string;
 }
 
@@ -14,7 +15,7 @@ export function RoleBadge({ role, className }: RoleBadgeProps) {
       variant: "default" as const,
       className: "bg-red-100 text-red-800 hover:bg-red-100",
     },
-    "data-entry": {
+    data_entry: {
       label: "Data Entry",
       icon: Edit,
       variant: "secondary" as const,
@@ -28,9 +29,7 @@ export function RoleBadge({ role, className }: RoleBadgeProps) {
     },
   };
 
-  const normalizedRole =
-    role === "data_entry" || role === "dataEntry" ? "data-entry" : role;
-  const config = roleConfig[normalizedRole];
+  const config = roleConfig[role];
   const Icon = config.icon;
 
   return (

@@ -15,7 +15,7 @@ export function CanEditWrapper({
 }: CanEditWrapperProps) {
   const { data } = authClient.useSession();
   const role = data?.user?.role as string | undefined;
-  const hasPermission = role === "admin" || role === "data-entry";
+  const hasPermission = role === "admin" || role === "data_entry";
 
   return hasPermission ? <>{children}</> : <>{fallback}</>;
 }
