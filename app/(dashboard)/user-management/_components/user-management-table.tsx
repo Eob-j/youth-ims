@@ -7,7 +7,10 @@ import { UserManagementDialogs } from "./user-management-dialogs";
 import type { userType } from "@/auth-schema";
 import { useUserManagementStore } from "@/store/user-management-store";
 import { toast } from "sonner";
-import { bulkDeleteUsers } from "@/server/actions/user-management";
+import {
+  bulkDeleteUsers,
+  retrySendInviteEmail,
+} from "@/server/actions/user-management";
 
 interface UserManagementTableProps {
   users: userType[];
@@ -45,6 +48,20 @@ export function UserManagementTable({
     }
   };
 
+  const handleRetrySendInvite = async (item: userType) => {
+    const res = await retrySendInviteEmail(item.id, item.email, item.name);
+    if (res.success) {
+      toast.success("Invite sent successfully.", {
+        richColors: true,
+      });
+    } else {
+      toast.error("Error", {
+        description: res.error,
+        richColors: true,
+      });
+    }
+  };
+
   const columns = getColumns({
     handleEdit,
     canManageActions: canEditData,
@@ -52,6 +69,7 @@ export function UserManagementTable({
       setSelectedItem(item);
       setDeleteOpen(true);
     },
+    handleRetrySendInvite,
   });
 
   return (

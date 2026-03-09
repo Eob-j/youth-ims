@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
   const token = searchParams.get("token");
 
   if (!token) {
-    return new Response("No token provided", { status: 400 });
+    redirect("/invalid-token");
   }
 
   // check if token is exist in the database
@@ -26,10 +26,10 @@ export async function GET(request: NextRequest) {
   await db
     .update(users)
     .set({ emailVerified: true })
-    .where(eq(verifications.identifier, record[0].identifier));
+    .where(eq(users.id, record[0].identifier));
 
   await db
     .delete(verifications)
     .where(eq(verifications.identifier, record[0].identifier));
-  redirect("/email-verified");
+  redirect("/email-verified-success");
 }

@@ -11,6 +11,9 @@ import { db } from "@/db";
 import { verifications } from "@/auth-schema";
 import { env } from "@/env";
 import { Resend } from "resend";
+import nodemailer from "nodemailer";
+import { transporter } from "@/lib/nodemailer/client";
+import { eq } from "drizzle-orm";
 
 type CreateUserInput = {
   name: string;
@@ -44,15 +47,10 @@ export async function createUser(data: CreateUserInput) {
       headers: requestHeaders,
     });
 
-    const tokenRes = await generateAndStoreToken({ userId: newUser.user.id });
-    if (!tokenRes.success) {
-      return fail("An error occurred while generating and storing the token.");
-    }
-
-    const token = tokenRes.data;
+    const tokenData = await generateAndStoreToken({ userId: newUser.user.id });
     await sendInviteEmail({
       email: newUser.user.email,
-      token,
+      token: tokenData.value,
       name: newUser.user.name,
     });
 
@@ -187,19 +185,16 @@ export async function bulkDeleteUsers(data: BulkDeleteUsersInput) {
 async function generateAndStoreToken({ userId }: { userId: string }) {
   const tokenSecret = crypto.randomBytes(32).toString("hex");
   const tokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours
-
-  try {
-    await db.insert(verifications).values({
+  const data = await db
+    .insert(verifications)
+    .values({
       identifier: userId,
       value: tokenSecret,
       expiresAt: tokenExpires,
       id: crypto.randomBytes(32).toString("hex"),
-    });
-    return ok(tokenSecret);
-  } catch (error) {
-    console.error(error);
-    return fail("An error occurred while generating and storing the token.");
-  }
+    })
+    .returning();
+  return data[0];
 }
 
 const baseUrl =
@@ -216,20 +211,58 @@ async function sendInviteEmail({
   token: string;
   name: string;
 }) {
-  const verifyUrl = `https://${baseUrl}/verify-email?token=${token}`;
+  const verifyUrl = `${baseUrl}/api/verify-email?token=${token}`;
 
-  try {
-    const resend = new Resend(env.RESEND_API_KEY);
-    await resend.emails.send({
-      from: `${env.EMAIL_SENDER_NAME} <${env.EMAIL_SENDER_ADDRESS}>`,
-      to: email,
-      subject: "You have been invited to join the Gambia Youth Data Dashboard",
-      html: `
+  //   const resend = new Resend(env.RESEND_API_KEY);
+  //   await resend.emails.send({
+  //     from: `${env.EMAIL_SENDER_NAME} <${env.EMAIL_SENDER_ADDRESS}>`,
+  //     to: email,
+  //     subject: "You have been invited to join the Gambia Youth Data Dashboard",
+  //     html: `
+  //   <p>Hi ${name}, you've been invited to join the platform.</p>
+  //   <a href="${verifyUrl}">Click here to verify your email & get started</a>
+  //   <p>This link expires in 24 hours.</p>
+  // `,
+  //   });
+
+  await transporter.sendMail({
+    from: `${env.EMAIL_SENDER_NAME} <dirudeen22@gmail.com>`,
+    to: email,
+    subject: "You have been invited to join the Gambia Youth Data Dashboard",
+    html: `
     <p>Hi ${name}, you've been invited to join the platform.</p>
     <a href="${verifyUrl}">Click here to verify your email & get started</a>
     <p>This link expires in 24 hours.</p>
-  `,
+  `, // HTML version of the message
+  });
+}
+
+export async function retrySendInviteEmail(
+  userId: string,
+  email: string,
+  name: string,
+) {
+  try {
+    // check if the user has an associated token
+    let [record] = await db
+      .select()
+      .from(verifications)
+      .where(eq(verifications.identifier, userId))
+      .limit(1);
+    // check if the token is expired
+    if (!record || record.expiresAt < new Date()) {
+      await db
+        .delete(verifications)
+        .where(eq(verifications.identifier, userId))
+        .returning();
+      record = await generateAndStoreToken({ userId });
+    }
+    await sendInviteEmail({
+      email,
+      token: record.value,
+      name,
     });
+    return ok("Invitation sent successfully.");
   } catch (error) {
     console.error(error);
     return fail("An error occurred while sending the email.");
