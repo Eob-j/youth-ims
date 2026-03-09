@@ -53,9 +53,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];

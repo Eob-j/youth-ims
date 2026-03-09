@@ -133,6 +133,57 @@ export async function deleteUser(data: DeleteUserInput) {
   }
 }
 
+type BulkDeleteUsersInput = {
+  id: string;
+}[];
+export async function bulkDeleteUsers(data: BulkDeleteUsersInput) {
+  const session = await getServerSideSession();
+
+  if (!session) {
+    return {
+      success: false,
+      message: "Unauthorized",
+    };
+  }
+
+  if (session.user.role !== "admin") {
+    return {
+      success: false,
+      message: "Unauthorized",
+    };
+  }
+
+  if (data.length === 0) {
+    return {
+      success: false,
+      message: "No records provided for deletion.",
+    };
+  }
+
+  try {
+    for (const obj of data) {
+      await auth.api.removeUser({
+        body: {
+          userId: obj.id,
+        },
+        headers: await headers(),
+      });
+    }
+    revalidatePath("/user-management");
+    return {
+      success: true,
+      message: "User(s) deleted successfully.",
+      deleted: data.length,
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      success: false,
+      message: "An error occurred while deleting the users.",
+    };
+  }
+}
+
 async function generateAndStoreToken({ userId }: { userId: string }) {
   const tokenSecret = crypto.randomBytes(32).toString("hex");
   const tokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours

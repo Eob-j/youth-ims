@@ -2,6 +2,7 @@
 
 import { userType } from "@/auth-schema";
 import { RoleBadge } from "@/components/role-badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,6 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Role } from "@/lib/types";
 import type { ColumnDef } from "@tanstack/react-table";
 import { Edit, MoreHorizontal, Trash2 } from "lucide-react";
 
@@ -38,8 +40,21 @@ export const getColumns = ({
       accessorKey: "role",
       header: "Role",
       cell: ({ row }) => {
-        const role = row.getValue("role") as "admin" | "data_entry" | "viewer";
+        const role = row.getValue("role") as Role;
         return <RoleBadge role={role} />;
+      },
+    },
+
+    {
+      accessorKey: "emailVerified",
+      header: "Email Verified",
+      cell: ({ row }) => {
+        const emailVerified = row.getValue("emailVerified") as Boolean;
+        return (
+          <Badge variant={emailVerified ? "default" : "destructive"}>
+            {emailVerified ? "True" : "False"}
+          </Badge>
+        );
       },
     },
     {

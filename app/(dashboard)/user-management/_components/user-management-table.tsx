@@ -7,6 +7,7 @@ import { UserManagementDialogs } from "./user-management-dialogs";
 import type { userType } from "@/auth-schema";
 import { useUserManagementStore } from "@/store/user-management-store";
 import { toast } from "sonner";
+import { bulkDeleteUsers } from "@/server/actions/user-management";
 
 interface UserManagementTableProps {
   users: userType[];
@@ -27,21 +28,21 @@ export function UserManagementTable({
 
   const handleBulkDelete = async (selectedRows: userType[]) => {
     console.log(selectedRows);
-    // const records = selectedRows.map((row) => ({
-    //   id: row.id
-    // }));
-    // // const res = await bulkDeleteYouthWithoutDisabilities(records);
-    // if (res.success) {
-    //   toast.success("Success", {
-    //     description: `${res.deleted} record${res.deleted === 1 ? "" : "s"} deleted successfully.`,
-    //     richColors: true,
-    //   });
-    // } else {
-    //   toast.error("Error", {
-    //     description: res.message,
-    //     richColors: true,
-    //   });
-    // }
+    const records = selectedRows.map((row) => ({
+      id: row.id,
+    }));
+    const res = await bulkDeleteUsers(records);
+    if (res.success) {
+      toast.success("Success", {
+        description: `${res.deleted} record${res.deleted === 1 ? "" : "s"} deleted successfully.`,
+        richColors: true,
+      });
+    } else {
+      toast.error("Error", {
+        description: res.message,
+        richColors: true,
+      });
+    }
   };
 
   const columns = getColumns({
@@ -60,7 +61,8 @@ export function UserManagementTable({
         data={users}
         searchKey="name"
         enableRowSelection={canEditData}
-        exportRoute="youth-without-disabilities"
+        exportRoute="user-management"
+        onBulkDelete={handleBulkDelete}
       />
 
       <UserManagementDialogs />
