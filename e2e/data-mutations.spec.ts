@@ -3,6 +3,7 @@ import {
   hasCredentials,
   missingCredentialsMessage,
   newLoggedInContext,
+  queryDb,
   sessionSwaps,
 } from "./helpers";
 
@@ -22,7 +23,8 @@ async function searchFor(page: Page, marker: string) {
   await page.getByPlaceholder("Search...").fill(marker);
 }
 
-async function createRecord(page: Page, marker: string) {
+// Opens the create dialog and fills it with valid values, without saving.
+async function fillCreateForm(page: Page, marker: string) {
   await page.getByRole("button", { name: "Add New Entry" }).click();
   const dialog = page.getByRole("dialog");
   // The first text field is the one the table searches on (LGA or age group).
@@ -38,8 +40,35 @@ async function createRecord(page: Page, marker: string) {
     const total = dialog.locator(`input#${id}:not([readonly])`);
     if ((await total.count()) > 0) await total.fill("2");
   }
+  // The server only accepts years from 1900 to 2100.
+  const year = dialog.locator("input#year");
+  if ((await year.count()) > 0) await year.fill("2024");
+  return dialog;
+}
+
+async function createRecord(page: Page, marker: string) {
+  const dialog = await fillCreateForm(page, marker);
   await dialog.locator('button[type="submit"]').click();
   await expect(dialog).toBeHidden();
+}
+
+// Rewrites the JSON argument of the next server action call the page makes,
+// the way a caller bypassing the form could.
+async function rewriteNextAction(
+  page: Page,
+  change: (arg: Record<string, unknown>) => void,
+) {
+  let done = false;
+  await page.route("**/*", async (route) => {
+    const request = route.request();
+    if (done || request.method() !== "POST" || !request.headers()["next-action"]) {
+      return route.fallback();
+    }
+    done = true;
+    const args = JSON.parse(request.postData() ?? "[]");
+    change(args[0]);
+    await route.continue({ postData: JSON.stringify(args) });
+  });
 }
 
 // Logs in as the editor and filters the table to rows matching `search`.
@@ -128,4 +157,80 @@ test.describe("update and delete actions", () => {
       });
     }
   }
+
+  // Input validation: the actions check what they are sent, not just the
+  // form. Each test changes the real request after the form submits it.
+  const youthPopulationRows = (marker: string) =>
+    queryDb(
+      "select id, version from youth_population where lga = $1",
+      [marker],
+    );
+
+  test("create ignores id and version sent by the caller", async ({
+    browser,
+  }) => {
+    const marker = `E2E-${Date.now()}`;
+    const { context, page } = await openSearch(
+      browser,
+      "/youth-population",
+      marker,
+    );
+    const dialog = await fillCreateForm(page, marker);
+    await rewriteNextAction(page, (arg) => {
+      arg.id = 2_000_000_000;
+      arg.version = 77;
+    });
+    await dialog.locator('button[type="submit"]').click();
+    await expect(dialog).toBeHidden();
+    await context.close();
+
+    const [row] = await youthPopulationRows(marker);
+    expect(row).toBeDefined();
+    expect(row.id).not.toBe(2_000_000_000);
+    expect(row.version).toBe(1);
+  });
+
+  test("create rejects a value of the wrong type", async ({ browser }) => {
+    const marker = `E2E-${Date.now()}`;
+    const { context, page } = await openSearch(
+      browser,
+      "/youth-population",
+      marker,
+    );
+    const dialog = await fillCreateForm(page, marker);
+    await rewriteNextAction(page, (arg) => {
+      arg.year = "not-a-year";
+    });
+    await dialog.locator('button[type="submit"]').click();
+    await expect(page.getByText(/Invalid year/)).toBeVisible();
+    await context.close();
+
+    expect(await youthPopulationRows(marker)).toHaveLength(0);
+  });
+
+  test("delete rejects a malformed id", async ({ browser }) => {
+    const marker = `E2E-${Date.now()}`;
+    const { context, page, rows } = await openSearch(
+      browser,
+      "/youth-population",
+      marker,
+    );
+    await createRecord(page, marker);
+    await searchFor(page, marker);
+    await expect(rows).toHaveCount(1);
+
+    await rows.getByRole("button").click();
+    await page.getByRole("menuitem", { name: "Delete" }).click();
+    await rewriteNextAction(page, (arg) => {
+      arg.id = -5;
+    });
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Delete" })
+      .click();
+    await expect(page.getByText(/Invalid id/)).toBeVisible();
+    await context.close();
+
+    expect(await youthPopulationRows(marker)).toHaveLength(1);
+  });
 });

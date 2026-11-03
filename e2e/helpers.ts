@@ -1,4 +1,17 @@
 import { expect, type Browser, type BrowserContext } from "@playwright/test";
+import { Client } from "pg";
+
+// Runs a read-only query against the app database, for checks the UI cannot
+// show (e.g. a record's id or version).
+export async function queryDb(sql: string, params: unknown[] = []) {
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  try {
+    return (await client.query(sql, params)).rows;
+  } finally {
+    await client.end();
+  }
+}
 
 export const credentials = {
   email: process.env.E2E_EMAIL ?? "",
