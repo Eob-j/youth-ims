@@ -32,9 +32,10 @@ async function createRecord(page: Page, marker: string) {
   for (const input of await editable.all()) {
     await input.fill("1");
   }
-  // The database requires male + female and urban + rural to equal the total.
+  // The database requires male + female and urban + rural to equal the total
+  // (calculated by the form as 1 + 1), and youth to be at most the population.
   for (const id of ["total", "totalPopulation"]) {
-    const total = dialog.locator(`input#${id}`);
+    const total = dialog.locator(`input#${id}:not([readonly])`);
     if ((await total.count()) > 0) await total.fill("2");
   }
   await dialog.locator('button[type="submit"]').click();
