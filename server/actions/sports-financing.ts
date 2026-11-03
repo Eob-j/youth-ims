@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { sportsFinancing } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
-import { getServerSideSession } from "@/lib/auth-helper";
+import { getEditorSession } from "@/lib/auth-helper";
 import { and, DrizzleQueryError, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -15,7 +15,7 @@ type CreateSportsFinancingInput = {
 };
 
 export async function createSportsFinancing(data: CreateSportsFinancingInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
@@ -49,7 +49,7 @@ type UpdateSportsFinancingInput = {
 };
 
 export async function updateSportsFinancing(data: UpdateSportsFinancingInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
@@ -87,7 +87,7 @@ export async function deleteSportsFinancing(data: {
   id: number;
   version: number;
 }) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
@@ -123,7 +123,7 @@ type BulkDeleteSportsFinancingInput = {
 export async function bulkDeleteSportsFinancing(
   records: BulkDeleteSportsFinancingInput,
 ) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }

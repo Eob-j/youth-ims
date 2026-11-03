@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { nediPrograms } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
-import { getServerSideSession } from "@/lib/auth-helper";
+import { getEditorSession } from "@/lib/auth-helper";
 import { StatusEnumType } from "@/lib/validations/nedi-programs";
 import { and, DrizzleQueryError, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -25,7 +25,7 @@ type CreateNediProgramInput = {
 };
 
 export async function createNediProgram(data: CreateNediProgramInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -68,7 +68,7 @@ type UpdateNediProgramInput = {
 };
 
 export async function updateNediProgram(data: UpdateNediProgramInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -119,7 +119,7 @@ export async function updateNediProgram(data: UpdateNediProgramInput) {
 }
 
 export async function deleteNediProgram(data: { id: number; version: number }) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -155,7 +155,7 @@ type BulkDeleteNediProgramsInput = {
 export async function bulkDeleteNediPrograms(
   records: BulkDeleteNediProgramsInput,
 ) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }

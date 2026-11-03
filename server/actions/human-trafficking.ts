@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { humanTrafficking } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
-import { getServerSideSession } from "@/lib/auth-helper";
+import { getEditorSession } from "@/lib/auth-helper";
 import { and, DrizzleQueryError, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -19,7 +19,7 @@ type CreateHumanTraffickingInput = {
 export async function createHumanTrafficking(
   data: CreateHumanTraffickingInput,
 ) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
@@ -57,7 +57,7 @@ type UpdateHumanTraffickingInput = {
 export async function updateHumanTrafficking(
   data: UpdateHumanTraffickingInput,
 ) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
@@ -97,7 +97,7 @@ export async function deleteHumanTrafficking(data: {
   id: number;
   version: number;
 }) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
@@ -135,7 +135,7 @@ type BulkDeleteHumanTraffickingInput = {
 export async function bulkDeleteHumanTrafficking(
   records: BulkDeleteHumanTraffickingInput,
 ) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }

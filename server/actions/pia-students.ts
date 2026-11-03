@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { piaStudents } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
-import { getServerSideSession } from "@/lib/auth-helper";
+import { getEditorSession } from "@/lib/auth-helper";
 import { and, DrizzleQueryError, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -17,7 +17,7 @@ type CreatePiaStudentsInput = {
 };
 
 export async function createPiaStudents(data: CreatePiaStudentsInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -53,7 +53,7 @@ type UpdatePiaStudentsInput = {
 };
 
 export async function updatePiaStudents(data: UpdatePiaStudentsInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
@@ -94,7 +94,7 @@ export async function updatePiaStudents(data: UpdatePiaStudentsInput) {
 }
 
 export async function deletePiaStudents(data: { id: number; version: number }) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
@@ -127,7 +127,7 @@ type BulkDeletePiaStudentsInput = {
 export async function bulkDeletePiaStudents(
   records: BulkDeletePiaStudentsInput,
 ) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }

@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { youthMigration } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
-import { getServerSideSession } from "@/lib/auth-helper";
+import { getEditorSession } from "@/lib/auth-helper";
 import { and, DrizzleQueryError, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -17,7 +17,7 @@ type CreateYouthMigrationInput = {
 };
 
 export async function createYouthMigration(data: CreateYouthMigrationInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
@@ -53,7 +53,7 @@ type UpdateYouthMigrationInput = {
 };
 
 export async function updateYouthMigration(data: UpdateYouthMigrationInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
@@ -93,7 +93,7 @@ export async function deleteYouthMigration(data: {
   id: number;
   version: number;
 }) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
@@ -129,7 +129,7 @@ type BulkDeleteYouthMigrationInput = {
 export async function bulkDeleteYouthMigration(
   records: BulkDeleteYouthMigrationInput,
 ) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }

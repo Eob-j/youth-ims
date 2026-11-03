@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { nyssPrograms } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
-import { getServerSideSession } from "@/lib/auth-helper";
+import { getEditorSession } from "@/lib/auth-helper";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -20,7 +20,7 @@ type CreateNyssProgramInput = {
 };
 
 export async function createNyssProgram(data: CreateNyssProgramInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -41,7 +41,7 @@ type UpdateNyssProgramInput = CreateNyssProgramInput & {
 };
 
 export async function updateNyssProgram(data: UpdateNyssProgramInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -81,7 +81,7 @@ export async function updateNyssProgram(data: UpdateNyssProgramInput) {
 }
 
 export async function deleteNyssProgram(data: { id: number; version: number }) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -117,7 +117,7 @@ type BulkDeleteNyssProgramsInput = {
 export async function bulkDeleteNyssPrograms(
   records: BulkDeleteNyssProgramsInput,
 ) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }

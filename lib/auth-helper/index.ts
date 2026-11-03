@@ -14,6 +14,19 @@ export const getServerSideSession = cache(async () => {
   return session;
 });
 
+// The session of a user allowed to change data (admin or data_entry), or null.
+// Use this in every action that creates, updates, deletes or imports data;
+// viewers can still read through getServerSideSession.
+export const getEditorSession = cache(async () => {
+  const session = await getServerSideSession();
+
+  if (!session || !canEditDataHelperFn(session.user.role as string)) {
+    return null;
+  }
+
+  return session;
+});
+
 export function canEditDataHelperFn(role: string) {
   return role === "admin" || role === "dataEntry" || role === "data_entry";
 }

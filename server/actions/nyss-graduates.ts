@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { nyssGraduates } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
-import { getServerSideSession } from "@/lib/auth-helper";
+import { getEditorSession } from "@/lib/auth-helper";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -19,7 +19,7 @@ type CreateNyssGraduateInput = {
 };
 
 export async function createNyssGraduate(data: CreateNyssGraduateInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -40,7 +40,7 @@ type UpdateNyssGraduateInput = CreateNyssGraduateInput & {
 };
 
 export async function updateNyssGraduate(data: UpdateNyssGraduateInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -82,7 +82,7 @@ export async function deleteNyssGraduate(data: {
   id: number;
   version: number;
 }) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -118,7 +118,7 @@ type BulkDeleteNyssGraduatesInput = {
 export async function bulkDeleteNyssGraduates(
   records: BulkDeleteNyssGraduatesInput,
 ) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }

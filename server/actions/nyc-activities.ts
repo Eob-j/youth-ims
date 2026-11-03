@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { nycActivities } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
-import { getServerSideSession } from "@/lib/auth-helper";
+import { getEditorSession } from "@/lib/auth-helper";
 import { parseSpreadsheet } from "@/lib/importer/parse-file";
 import { nycActivityImportSchema } from "@/lib/validations/nyc-activities";
 import { and, eq } from "drizzle-orm";
@@ -24,7 +24,7 @@ type CreateNycActivityInput = {
 };
 
 export async function createNycActivity(data: CreateNycActivityInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -45,7 +45,7 @@ type UpdateNycActivityInput = CreateNycActivityInput & {
 };
 
 export async function updateNycActivity(data: UpdateNycActivityInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -86,7 +86,7 @@ export async function updateNycActivity(data: UpdateNycActivityInput) {
 }
 
 export async function deleteNycActivity(data: { id: number; version: number }) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -117,7 +117,7 @@ export async function deleteNycActivity(data: { id: number; version: number }) {
 export async function bulkDeleteNycActivities(
   records: { id: number; version: number }[],
 ) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -178,7 +178,7 @@ function normalizeNumber(value: unknown) {
 }
 
 export async function importNycActivitiesData(formData: FormData) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return { success: false, error: "Unauthorized" };
   }

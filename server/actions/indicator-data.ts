@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { indicatorData, type IndicatorDataType } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
-import { getServerSideSession } from "@/lib/auth-helper";
+import { getEditorSession } from "@/lib/auth-helper";
 import { parseSpreadsheet } from "@/lib/importer/parse-file";
 import { indicatorDataImportRowSchema } from "@/lib/validations/indicator-data";
 import { and, eq } from "drizzle-orm";
@@ -22,7 +22,7 @@ type IndicatorPayload = {
 };
 
 export async function createIndicatorData(data: IndicatorPayload) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -50,7 +50,7 @@ type UpdateIndicatorDataInput = IndicatorPayload & {
 };
 
 export async function updateIndicatorData(data: UpdateIndicatorDataInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -93,7 +93,7 @@ export async function deleteIndicatorData(data: {
   id: number;
   version: number;
 }) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -124,7 +124,7 @@ export async function deleteIndicatorData(data: {
 export async function bulkDeleteIndicatorData(
   records: { id: number; version: number }[],
 ) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -205,7 +205,7 @@ function getValue(row: Record<string, unknown>, candidates: string[]) {
 }
 
 export async function importIndicatorData(formData: FormData) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return { success: false, error: "Unauthorized" };
   }

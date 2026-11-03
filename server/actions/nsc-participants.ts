@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { nscParticipants } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
-import { getServerSideSession } from "@/lib/auth-helper";
+import { getEditorSession } from "@/lib/auth-helper";
 import { parseSpreadsheet } from "@/lib/importer/parse-file";
 import { nscParticipantImportSchema } from "@/lib/validations/nsc-participants";
 import { and, eq } from "drizzle-orm";
@@ -25,7 +25,7 @@ type CreateNscParticipantInput = {
 };
 
 export async function createNscParticipant(data: CreateNscParticipantInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -46,7 +46,7 @@ type UpdateNscParticipantInput = CreateNscParticipantInput & {
 };
 
 export async function updateNscParticipant(data: UpdateNscParticipantInput) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -88,7 +88,7 @@ export async function updateNscParticipant(data: UpdateNscParticipantInput) {
 }
 
 export async function deleteNscParticipant(data: { id: number; version: number }) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -119,7 +119,7 @@ export async function deleteNscParticipant(data: { id: number; version: number }
 export async function bulkDeleteNscParticipants(
   records: { id: number; version: number }[],
 ) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
@@ -183,7 +183,7 @@ function normalizeNumber(value: unknown) {
 }
 
 export async function importNscParticipantsData(formData: FormData) {
-  const session = await getServerSideSession();
+  const session = await getEditorSession();
   if (!session) {
     return { success: false, error: "Unauthorized" };
   }
