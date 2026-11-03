@@ -1,5 +1,3 @@
-"use server";
-
 import { db } from "@/db";
 import { parseSpreadsheet } from "./parse-file";
 import { processColumns } from "./column-processing";

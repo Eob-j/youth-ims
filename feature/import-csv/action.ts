@@ -15,8 +15,14 @@ import { importIndicatorData as importIndicatorDataAction } from "@/server/actio
 import { importNycParticipantsData as importNycParticipantsDataAction } from "@/server/actions/nyc-participants";
 import { importNscParticipantsData as importNscParticipantsDataAction } from "@/server/actions/nsc-participants";
 import { importNycActivitiesData as importNycActivitiesDataAction } from "@/server/actions/nyc-activities";
+import { getServerSideSession } from "@/lib/auth-helper";
 
 export async function importYouthPoplationData(formData: FormData) {
+  const session = await getServerSideSession();
+  if (!session) {
+    return { success: false, error: "Unauthorized" };
+  }
+
   const file = formData.get("file") as File;
 
   return importSpreadsheet({
@@ -27,6 +33,11 @@ export async function importYouthPoplationData(formData: FormData) {
 }
 
 export async function importYouthWithDisabilitiesData(formData: FormData) {
+  const session = await getServerSideSession();
+  if (!session) {
+    return { success: false, error: "Unauthorized" };
+  }
+
   const file = formData.get("file") as File;
 
   return importSpreadsheet({
@@ -37,6 +48,11 @@ export async function importYouthWithDisabilitiesData(formData: FormData) {
 }
 
 export async function importYouthWithoutDisabilitiesData(formData: FormData) {
+  const session = await getServerSideSession();
+  if (!session) {
+    return { success: false, error: "Unauthorized" };
+  }
+
   const file = formData.get("file") as File;
 
   return importSpreadsheet({
@@ -47,6 +63,11 @@ export async function importYouthWithoutDisabilitiesData(formData: FormData) {
 }
 
 export async function importHumanTraffickingData(formData: FormData) {
+  const session = await getServerSideSession();
+  if (!session) {
+    return { success: false, error: "Unauthorized" };
+  }
+
   const file = formData.get("file") as File;
 
   return importSpreadsheet({
@@ -57,6 +78,11 @@ export async function importHumanTraffickingData(formData: FormData) {
 }
 
 export async function importYouthMigrationData(formData: FormData) {
+  const session = await getServerSideSession();
+  if (!session) {
+    return { success: false, error: "Unauthorized" };
+  }
+
   const file = formData.get("file") as File;
 
   return importSpreadsheet({
@@ -67,6 +93,11 @@ export async function importYouthMigrationData(formData: FormData) {
 }
 
 export async function importNediProgramsData(formData: FormData) {
+  const session = await getServerSideSession();
+  if (!session) {
+    return { success: false, error: "Unauthorized" };
+  }
+
   const file = formData.get("file") as File;
 
   return importSpreadsheet({
@@ -77,6 +108,11 @@ export async function importNediProgramsData(formData: FormData) {
 }
 
 export async function importNyssProgramsData(formData: FormData) {
+  const session = await getServerSideSession();
+  if (!session) {
+    return { success: false, error: "Unauthorized" };
+  }
+
   const file = formData.get("file") as File;
 
   return importSpreadsheet({
@@ -87,6 +123,11 @@ export async function importNyssProgramsData(formData: FormData) {
 }
 
 export async function importNyssGraduatesData(formData: FormData) {
+  const session = await getServerSideSession();
+  if (!session) {
+    return { success: false, error: "Unauthorized" };
+  }
+
   const file = formData.get("file") as File;
 
   return importSpreadsheet({
