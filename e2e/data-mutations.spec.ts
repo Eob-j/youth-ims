@@ -27,11 +27,13 @@ async function createRecord(page: Page, marker: string) {
   const dialog = page.getByRole("dialog");
   // The first text field is the one the table searches on (LGA or age group).
   await dialog.locator('input:not([type="number"])').first().fill(marker);
-  for (const input of await dialog.locator('input[type="number"]').all()) {
+  // Read-only fields (youth population) are calculated by the form.
+  const editable = dialog.locator('input[type="number"]:not([readonly])');
+  for (const input of await editable.all()) {
     await input.fill("1");
   }
   // The database requires male + female and urban + rural to equal the total.
-  for (const id of ["total", "totalPopulation", "youthPopulation"]) {
+  for (const id of ["total", "totalPopulation"]) {
     const total = dialog.locator(`input#${id}`);
     if ((await total.count()) > 0) await total.fill("2");
   }

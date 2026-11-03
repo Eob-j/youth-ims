@@ -58,5 +58,11 @@ test.describe("exports with a session", () => {
     );
     expect(res.status()).toBe(200);
     expect(res.headers()["content-type"]).toContain("text/csv");
+
+    // Same labels and order as the table in the UI.
+    const [headerRow] = (await res.text()).split("\n");
+    expect(headerRow.trim()).toBe(
+      "LGA,Total Population,Youth Population,Youth Share (%),Male Youth,Female Youth,Urban Youth,Rural Youth,Year",
+    );
   });
 });
