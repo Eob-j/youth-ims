@@ -7,29 +7,43 @@ import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
 import { and, DrizzleQueryError, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import {
+  invalidInput,
+  recordRefSchema,
+  recordRefsSchema,
+  type RecordRef,
+  requiredText,
+  wholeNumber,
+} from "@/lib/validations/action-input";
+import z from "zod";
 
-type CreateYouthWithDisabilitiesInput = {
-  ageGroup: string;
-  total: number;
-  male: number;
-  female: number;
-  urban: number;
-  rural: number;
-  seeing: number;
-  hearing: number;
-  physical: number;
-  learning: number;
-  selfcare: number;
-  speech: number;
-};
+const createYouthWithDisabilitiesSchema = z.object({
+  ageGroup: requiredText,
+  total: wholeNumber,
+  male: wholeNumber,
+  female: wholeNumber,
+  urban: wholeNumber,
+  rural: wholeNumber,
+  seeing: wholeNumber,
+  hearing: wholeNumber,
+  physical: wholeNumber,
+  learning: wholeNumber,
+  selfcare: wholeNumber,
+  speech: wholeNumber,
+});
+type CreateYouthWithDisabilitiesInput = z.infer<typeof createYouthWithDisabilitiesSchema>;
 
-export async function createYouthWithDisabilities(
-  data: CreateYouthWithDisabilitiesInput,
-) {
+export async function createYouthWithDisabilities(input: CreateYouthWithDisabilitiesInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = createYouthWithDisabilitiesSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const [row] = await db
@@ -53,30 +67,20 @@ export async function createYouthWithDisabilities(
   }
 }
 
-type UpdateYouthWithDisabilitiesInput = {
-  id: number;
-  ageGroup: string;
-  total: number;
-  male: number;
-  female: number;
-  urban: number;
-  rural: number;
-  seeing: number;
-  hearing: number;
-  physical: number;
-  learning: number;
-  selfcare: number;
-  speech: number;
-  version: number;
-};
+const updateYouthWithDisabilitiesSchema = createYouthWithDisabilitiesSchema.extend(recordRefSchema.shape);
+type UpdateYouthWithDisabilitiesInput = z.infer<typeof updateYouthWithDisabilitiesSchema>;
 
-export async function updateYouthWithDisabilities(
-  data: UpdateYouthWithDisabilitiesInput,
-) {
+export async function updateYouthWithDisabilities(input: UpdateYouthWithDisabilitiesInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = updateYouthWithDisabilitiesSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -115,14 +119,17 @@ export async function updateYouthWithDisabilities(
   }
 }
 
-export async function deleteYouthWithDisabilities(data: {
-  id: number;
-  version: number;
-}) {
+export async function deleteYouthWithDisabilities(input: RecordRef) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   const { id, version } = data;
 
@@ -152,18 +159,19 @@ export async function deleteYouthWithDisabilities(data: {
   }
 }
 
-type BulkDeleteYouthWithDisabilitiesInput = {
-  id: number;
-  version: number;
-}[];
+type BulkDeleteYouthWithDisabilitiesInput = RecordRef[];
 
-export async function bulkDeleteYouthWithDisabilities(
-  records: BulkDeleteYouthWithDisabilitiesInput,
-) {
+export async function bulkDeleteYouthWithDisabilities(input: BulkDeleteYouthWithDisabilitiesInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = recordRefsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, message: invalidInput(parsed.error) };
+  }
+  const records = parsed.data;
 
   try {
     if (!records || records.length === 0) {

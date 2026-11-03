@@ -6,24 +6,42 @@ import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import {
+  invalidInput,
+  recordRefSchema,
+  recordRefsSchema,
+  type RecordRef,
+  requiredText,
+  wholeNumber,
+  yearNumber,
+  decimalText,
+} from "@/lib/validations/action-input";
+import z from "zod";
 
-type CreateNyssProgramInput = {
-  programName: string;
-  institution: string;
-  year: number;
-  region: string;
-  sector: string;
-  totalGraduates: number;
-  maleGraduates: number;
-  femaleGraduates: number;
-  employmentRate: string;
-};
+const createNyssProgramSchema = z.object({
+  programName: requiredText,
+  institution: requiredText,
+  year: yearNumber,
+  region: requiredText,
+  sector: requiredText,
+  totalGraduates: wholeNumber,
+  maleGraduates: wholeNumber,
+  femaleGraduates: wholeNumber,
+  employmentRate: decimalText,
+});
+type CreateNyssProgramInput = z.infer<typeof createNyssProgramSchema>;
 
-export async function createNyssProgram(data: CreateNyssProgramInput) {
+export async function createNyssProgram(input: CreateNyssProgramInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = createNyssProgramSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const [row] = await db.insert(nyssPrograms).values(data).returning();
@@ -35,16 +53,20 @@ export async function createNyssProgram(data: CreateNyssProgramInput) {
   }
 }
 
-type UpdateNyssProgramInput = CreateNyssProgramInput & {
-  id: number;
-  version: number;
-};
+const updateNyssProgramSchema = createNyssProgramSchema.extend(recordRefSchema.shape);
+type UpdateNyssProgramInput = z.infer<typeof updateNyssProgramSchema>;
 
-export async function updateNyssProgram(data: UpdateNyssProgramInput) {
+export async function updateNyssProgram(input: UpdateNyssProgramInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = updateNyssProgramSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -80,11 +102,17 @@ export async function updateNyssProgram(data: UpdateNyssProgramInput) {
   }
 }
 
-export async function deleteNyssProgram(data: { id: number; version: number }) {
+export async function deleteNyssProgram(input: RecordRef) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -109,18 +137,19 @@ export async function deleteNyssProgram(data: { id: number; version: number }) {
   }
 }
 
-type BulkDeleteNyssProgramsInput = {
-  id: number;
-  version: number;
-}[];
+type BulkDeleteNyssProgramsInput = RecordRef[];
 
-export async function bulkDeleteNyssPrograms(
-  records: BulkDeleteNyssProgramsInput,
-) {
+export async function bulkDeleteNyssPrograms(input: BulkDeleteNyssProgramsInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefsSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const records = parsed.data;
 
   try {
     if (!records || records.length === 0) {

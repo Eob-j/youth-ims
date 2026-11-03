@@ -9,26 +9,43 @@ import { nycParticipantImportSchema } from "@/lib/validations/nyc-participants";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import z from "zod";
+import {
+  invalidInput,
+  recordRefSchema,
+  recordRefsSchema,
+  type RecordRef,
+  requiredText,
+  wholeNumber,
+  isoDate,
+} from "@/lib/validations/action-input";
+import { NYC_GENDERS, NYC_STATUSES } from "@/lib/schema/nyc-participants";
 
-type CreateNycParticipantInput = {
-  name: string;
-  age: number;
-  gender: "Male" | "Female";
-  region: string;
-  category: string;
-  sport: string;
-  level: string;
-  status: "Active" | "Inactive" | "Retired";
-  achievements?: string;
-  dateRegistered: string;
-  contact?: string;
-};
+const createNycParticipantSchema = z.object({
+  name: requiredText,
+  age: wholeNumber,
+  gender: z.enum(NYC_GENDERS),
+  region: requiredText,
+  category: requiredText,
+  sport: requiredText,
+  level: requiredText,
+  status: z.enum(NYC_STATUSES),
+  achievements: z.string().optional(),
+  dateRegistered: isoDate,
+  contact: z.string().optional(),
+});
+type CreateNycParticipantInput = z.infer<typeof createNycParticipantSchema>;
 
-export async function createNycParticipant(data: CreateNycParticipantInput) {
+export async function createNycParticipant(input: CreateNycParticipantInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = createNycParticipantSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const [row] = await db.insert(nycParticipants).values(data).returning();
@@ -40,16 +57,20 @@ export async function createNycParticipant(data: CreateNycParticipantInput) {
   }
 }
 
-type UpdateNycParticipantInput = CreateNycParticipantInput & {
-  id: number;
-  version: number;
-};
+const updateNycParticipantSchema = createNycParticipantSchema.extend(recordRefSchema.shape);
+type UpdateNycParticipantInput = z.infer<typeof updateNycParticipantSchema>;
 
-export async function updateNycParticipant(data: UpdateNycParticipantInput) {
+export async function updateNycParticipant(input: UpdateNycParticipantInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = updateNycParticipantSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -87,11 +108,17 @@ export async function updateNycParticipant(data: UpdateNycParticipantInput) {
   }
 }
 
-export async function deleteNycParticipant(data: { id: number; version: number }) {
+export async function deleteNycParticipant(input: RecordRef) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -116,13 +143,17 @@ export async function deleteNycParticipant(data: { id: number; version: number }
   }
 }
 
-export async function bulkDeleteNycParticipants(
-  records: { id: number; version: number }[],
-) {
+export async function bulkDeleteNycParticipants(input: RecordRef[]) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefsSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const records = parsed.data;
 
   if (!records || records.length === 0) {
     return fail("No records provided for deletion.");

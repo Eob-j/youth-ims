@@ -6,21 +6,38 @@ import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
 import { and, DrizzleQueryError, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import {
+  invalidInput,
+  recordRefSchema,
+  recordRefsSchema,
+  type RecordRef,
+  requiredText,
+  wholeNumber,
+  yearNumber,
+} from "@/lib/validations/action-input";
+import z from "zod";
 
-type CreateYouthMigrationInput = {
-  year: number;
-  total: number;
-  male: number;
-  female: number;
-  origin: string;
-  destination: string;
-};
+const createYouthMigrationSchema = z.object({
+  year: yearNumber,
+  total: wholeNumber,
+  male: wholeNumber,
+  female: wholeNumber,
+  origin: requiredText,
+  destination: requiredText,
+});
+type CreateYouthMigrationInput = z.infer<typeof createYouthMigrationSchema>;
 
-export async function createYouthMigration(data: CreateYouthMigrationInput) {
+export async function createYouthMigration(input: CreateYouthMigrationInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = createYouthMigrationSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const [row] = await db.insert(youthMigration).values(data).returning();
@@ -41,22 +58,20 @@ export async function createYouthMigration(data: CreateYouthMigrationInput) {
   }
 }
 
-type UpdateYouthMigrationInput = {
-  id: number;
-  year: number;
-  total: number;
-  male: number;
-  female: number;
-  origin: string;
-  destination: string;
-  version: number;
-};
+const updateYouthMigrationSchema = createYouthMigrationSchema.extend(recordRefSchema.shape);
+type UpdateYouthMigrationInput = z.infer<typeof updateYouthMigrationSchema>;
 
-export async function updateYouthMigration(data: UpdateYouthMigrationInput) {
+export async function updateYouthMigration(input: UpdateYouthMigrationInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = updateYouthMigrationSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -89,14 +104,17 @@ export async function updateYouthMigration(data: UpdateYouthMigrationInput) {
   }
 }
 
-export async function deleteYouthMigration(data: {
-  id: number;
-  version: number;
-}) {
+export async function deleteYouthMigration(input: RecordRef) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = recordRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   const { id, version } = data;
 
@@ -121,18 +139,19 @@ export async function deleteYouthMigration(data: {
   }
 }
 
-type BulkDeleteYouthMigrationInput = {
-  id: number;
-  version: number;
-}[];
+type BulkDeleteYouthMigrationInput = RecordRef[];
 
-export async function bulkDeleteYouthMigration(
-  records: BulkDeleteYouthMigrationInput,
-) {
+export async function bulkDeleteYouthMigration(input: BulkDeleteYouthMigrationInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = recordRefsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, message: invalidInput(parsed.error) };
+  }
+  const records = parsed.data;
 
   try {
     if (!records || records.length === 0) {

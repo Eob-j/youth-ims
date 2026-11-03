@@ -7,28 +7,46 @@ import { getEditorSession } from "@/lib/auth-helper";
 import { StatusEnumType } from "@/lib/validations/nedi-programs";
 import { and, DrizzleQueryError, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import {
+  invalidInput,
+  recordRefSchema,
+  recordRefsSchema,
+  type RecordRef,
+  requiredText,
+  wholeNumber,
+  isoDate,
+} from "@/lib/validations/action-input";
+import z from "zod";
+import { statusEnum } from "@/db/schema";
 
-type CreateNediProgramInput = {
-  programName: string;
-  targetGroup: string;
-  beneficiaries: number | null;
-  serviceType: string;
-  description: string;
-  status: StatusEnumType;
-  location: string;
-  maleParticipants?: number | null;
-  femaleParticipants?: number | null;
-  startDate: string;
-  endDate?: string | null;
-  implementingPartner: string;
-  fundingSource: string;
-};
+const createNediProgramSchema = z.object({
+  programName: requiredText,
+  targetGroup: requiredText,
+  beneficiaries: wholeNumber.nullable(),
+  serviceType: requiredText,
+  description: requiredText,
+  status: z.enum(statusEnum.enumValues),
+  location: requiredText,
+  maleParticipants: wholeNumber.nullable().optional(),
+  femaleParticipants: wholeNumber.nullable().optional(),
+  startDate: isoDate,
+  endDate: isoDate.nullable().optional(),
+  implementingPartner: requiredText,
+  fundingSource: requiredText,
+});
+type CreateNediProgramInput = z.infer<typeof createNediProgramSchema>;
 
-export async function createNediProgram(data: CreateNediProgramInput) {
+export async function createNediProgram(input: CreateNediProgramInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = createNediProgramSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const [row] = await db.insert(nediPrograms).values(data).returning();
@@ -49,29 +67,20 @@ export async function createNediProgram(data: CreateNediProgramInput) {
   }
 }
 
-type UpdateNediProgramInput = {
-  id: number;
-  programName: string;
-  targetGroup: string;
-  beneficiaries: number | null;
-  serviceType: string;
-  description: string;
-  status: StatusEnumType;
-  location: string;
-  maleParticipants: number | null;
-  femaleParticipants: number | null;
-  startDate: string;
-  endDate?: string | null;
-  implementingPartner: string;
-  fundingSource: string;
-  version: number;
-};
+const updateNediProgramSchema = createNediProgramSchema.extend(recordRefSchema.shape);
+type UpdateNediProgramInput = z.infer<typeof updateNediProgramSchema>;
 
-export async function updateNediProgram(data: UpdateNediProgramInput) {
+export async function updateNediProgram(input: UpdateNediProgramInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = updateNediProgramSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -118,11 +127,17 @@ export async function updateNediProgram(data: UpdateNediProgramInput) {
   }
 }
 
-export async function deleteNediProgram(data: { id: number; version: number }) {
+export async function deleteNediProgram(input: RecordRef) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -147,18 +162,19 @@ export async function deleteNediProgram(data: { id: number; version: number }) {
   }
 }
 
-type BulkDeleteNediProgramsInput = {
-  id: number;
-  version: number;
-}[];
+type BulkDeleteNediProgramsInput = RecordRef[];
 
-export async function bulkDeleteNediPrograms(
-  records: BulkDeleteNediProgramsInput,
-) {
+export async function bulkDeleteNediPrograms(input: BulkDeleteNediProgramsInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefsSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const records = parsed.data;
 
   try {
     if (!records || records.length === 0) {

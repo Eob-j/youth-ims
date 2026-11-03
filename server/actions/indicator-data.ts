@@ -9,23 +9,40 @@ import { indicatorDataImportRowSchema } from "@/lib/validations/indicator-data";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import z from "zod";
+import {
+  invalidInput,
+  recordRefSchema,
+  recordRefsSchema,
+  type RecordRef,
+  requiredText,
+  wholeNumber,
+  yearNumber,
+} from "@/lib/validations/action-input";
+import { INDICATOR_CATEGORIES, INDICATOR_ORGANIZATIONS } from "@/lib/schema/indicator-data";
 
-type IndicatorPayload = {
-  organization: IndicatorDataType["organization"];
-  indicator: string;
-  year: number;
-  region: string;
-  male: number;
-  female: number;
-  referenceSource: string;
-  category: IndicatorDataType["category"];
-};
+const indicatorPayloadSchema = z.object({
+  organization: z.enum(INDICATOR_ORGANIZATIONS),
+  indicator: requiredText,
+  year: yearNumber,
+  region: requiredText,
+  male: wholeNumber,
+  female: wholeNumber,
+  referenceSource: requiredText,
+  category: z.enum(INDICATOR_CATEGORIES),
+});
+type IndicatorPayload = z.infer<typeof indicatorPayloadSchema>;
 
-export async function createIndicatorData(data: IndicatorPayload) {
+export async function createIndicatorData(input: IndicatorPayload) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = indicatorPayloadSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const [row] = await db
@@ -44,16 +61,20 @@ export async function createIndicatorData(data: IndicatorPayload) {
   }
 }
 
-type UpdateIndicatorDataInput = IndicatorPayload & {
-  id: number;
-  version: number;
-};
+const updateIndicatorDataSchema = indicatorPayloadSchema.extend(recordRefSchema.shape);
+type UpdateIndicatorDataInput = z.infer<typeof updateIndicatorDataSchema>;
 
-export async function updateIndicatorData(data: UpdateIndicatorDataInput) {
+export async function updateIndicatorData(input: UpdateIndicatorDataInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = updateIndicatorDataSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -89,14 +110,17 @@ export async function updateIndicatorData(data: UpdateIndicatorDataInput) {
   }
 }
 
-export async function deleteIndicatorData(data: {
-  id: number;
-  version: number;
-}) {
+export async function deleteIndicatorData(input: RecordRef) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -121,13 +145,17 @@ export async function deleteIndicatorData(data: {
   }
 }
 
-export async function bulkDeleteIndicatorData(
-  records: { id: number; version: number }[],
-) {
+export async function bulkDeleteIndicatorData(input: RecordRef[]) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefsSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const records = parsed.data;
 
   if (!records || records.length === 0) {
     return fail("No records provided for deletion.");

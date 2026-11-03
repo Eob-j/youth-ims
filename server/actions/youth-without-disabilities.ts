@@ -6,23 +6,37 @@ import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
 import { and, DrizzleQueryError, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import {
+  invalidInput,
+  recordRefSchema,
+  recordRefsSchema,
+  type RecordRef,
+  requiredText,
+  wholeNumber,
+} from "@/lib/validations/action-input";
+import z from "zod";
 
-type CreateYouthWithoutDisabilitiesInput = {
-  ageGroup: string;
-  total: number;
-  male: number;
-  female: number;
-  urban: number;
-  rural: number;
-};
+const createYouthWithoutDisabilitiesSchema = z.object({
+  ageGroup: requiredText,
+  total: wholeNumber,
+  male: wholeNumber,
+  female: wholeNumber,
+  urban: wholeNumber,
+  rural: wholeNumber,
+});
+type CreateYouthWithoutDisabilitiesInput = z.infer<typeof createYouthWithoutDisabilitiesSchema>;
 
-export async function createYouthWithoutDisabilities(
-  data: CreateYouthWithoutDisabilitiesInput,
-) {
+export async function createYouthWithoutDisabilities(input: CreateYouthWithoutDisabilitiesInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = createYouthWithoutDisabilitiesSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const [row] = await db
@@ -46,24 +60,20 @@ export async function createYouthWithoutDisabilities(
   }
 }
 
-type UpdateYouthWithoutDisabilitiesInput = {
-  id: number;
-  ageGroup: string;
-  total: number;
-  male: number;
-  female: number;
-  urban: number;
-  rural: number;
-  version: number;
-};
+const updateYouthWithoutDisabilitiesSchema = createYouthWithoutDisabilitiesSchema.extend(recordRefSchema.shape);
+type UpdateYouthWithoutDisabilitiesInput = z.infer<typeof updateYouthWithoutDisabilitiesSchema>;
 
-export async function updateYouthWithoutDisabilities(
-  data: UpdateYouthWithoutDisabilitiesInput,
-) {
+export async function updateYouthWithoutDisabilities(input: UpdateYouthWithoutDisabilitiesInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = updateYouthWithoutDisabilitiesSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -96,14 +106,17 @@ export async function updateYouthWithoutDisabilities(
   }
 }
 
-export async function deleteYouthWithoutDisabilities(data: {
-  id: number;
-  version: number;
-}) {
+export async function deleteYouthWithoutDisabilities(input: RecordRef) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   const { id, version } = data;
 
@@ -133,18 +146,19 @@ export async function deleteYouthWithoutDisabilities(data: {
   }
 }
 
-type BulkDeleteYouthWithoutDisabilitiesInput = {
-  id: number;
-  version: number;
-}[];
+type BulkDeleteYouthWithoutDisabilitiesInput = RecordRef[];
 
-export async function bulkDeleteYouthWithoutDisabilities(
-  records: BulkDeleteYouthWithoutDisabilitiesInput,
-) {
+export async function bulkDeleteYouthWithoutDisabilities(input: BulkDeleteYouthWithoutDisabilitiesInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = recordRefsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, message: invalidInput(parsed.error) };
+  }
+  const records = parsed.data;
 
   try {
     if (!records || records.length === 0) {

@@ -6,19 +6,36 @@ import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
 import { and, DrizzleQueryError, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import {
+  invalidInput,
+  recordRefSchema,
+  recordRefsSchema,
+  type RecordRef,
+  requiredText,
+  yearNumber,
+  decimalText,
+} from "@/lib/validations/action-input";
+import z from "zod";
 
-type CreateSportsFinancingInput = {
-  associationName: string;
-  amount: string;
-  year: number;
-  period: string;
-};
+const createSportsFinancingSchema = z.object({
+  associationName: requiredText,
+  amount: decimalText,
+  year: yearNumber,
+  period: requiredText,
+});
+type CreateSportsFinancingInput = z.infer<typeof createSportsFinancingSchema>;
 
-export async function createSportsFinancing(data: CreateSportsFinancingInput) {
+export async function createSportsFinancing(input: CreateSportsFinancingInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = createSportsFinancingSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const [row] = await db.insert(sportsFinancing).values(data).returning();
@@ -39,20 +56,20 @@ export async function createSportsFinancing(data: CreateSportsFinancingInput) {
   }
 }
 
-type UpdateSportsFinancingInput = {
-  id: number;
-  associationName: string;
-  amount: string;
-  year: number;
-  period: string;
-  version: number;
-};
+const updateSportsFinancingSchema = createSportsFinancingSchema.extend(recordRefSchema.shape);
+type UpdateSportsFinancingInput = z.infer<typeof updateSportsFinancingSchema>;
 
-export async function updateSportsFinancing(data: UpdateSportsFinancingInput) {
+export async function updateSportsFinancing(input: UpdateSportsFinancingInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = updateSportsFinancingSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -83,14 +100,17 @@ export async function updateSportsFinancing(data: UpdateSportsFinancingInput) {
   }
 }
 
-export async function deleteSportsFinancing(data: {
-  id: number;
-  version: number;
-}) {
+export async function deleteSportsFinancing(input: RecordRef) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = recordRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   const { id, version } = data;
 
@@ -115,18 +135,19 @@ export async function deleteSportsFinancing(data: {
   }
 }
 
-type BulkDeleteSportsFinancingInput = {
-  id: number;
-  version: number;
-}[];
+type BulkDeleteSportsFinancingInput = RecordRef[];
 
-export async function bulkDeleteSportsFinancing(
-  records: BulkDeleteSportsFinancingInput,
-) {
+export async function bulkDeleteSportsFinancing(input: BulkDeleteSportsFinancingInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = recordRefsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, message: invalidInput(parsed.error) };
+  }
+  const records = parsed.data;
 
   try {
     if (!records || records.length === 0) {

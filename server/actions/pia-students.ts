@@ -6,21 +6,37 @@ import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
 import { and, DrizzleQueryError, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import {
+  invalidInput,
+  recordRefSchema,
+  recordRefsSchema,
+  type RecordRef,
+  requiredText,
+  wholeNumber,
+} from "@/lib/validations/action-input";
+import z from "zod";
 
-type CreatePiaStudentsInput = {
-  department: string;
-  year: string;
-  male: number;
-  female: number;
-  enrolled: number;
-  graduated: number;
-};
+const createPiaStudentsSchema = z.object({
+  department: requiredText,
+  year: requiredText,
+  male: wholeNumber,
+  female: wholeNumber,
+  enrolled: wholeNumber,
+  graduated: wholeNumber,
+});
+type CreatePiaStudentsInput = z.infer<typeof createPiaStudentsSchema>;
 
-export async function createPiaStudents(data: CreatePiaStudentsInput) {
+export async function createPiaStudents(input: CreatePiaStudentsInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = createPiaStudentsSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const [row] = await db.insert(piaStudents).values(data).returning();
@@ -41,22 +57,20 @@ export async function createPiaStudents(data: CreatePiaStudentsInput) {
   }
 }
 
-type UpdatePiaStudentsInput = {
-  id: number;
-  department: string;
-  year: string;
-  male: number;
-  female: number;
-  enrolled: number;
-  graduated: number;
-  version: number;
-};
+const updatePiaStudentsSchema = createPiaStudentsSchema.extend(recordRefSchema.shape);
+type UpdatePiaStudentsInput = z.infer<typeof updatePiaStudentsSchema>;
 
-export async function updatePiaStudents(data: UpdatePiaStudentsInput) {
+export async function updatePiaStudents(input: UpdatePiaStudentsInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = updatePiaStudentsSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -93,11 +107,17 @@ export async function updatePiaStudents(data: UpdatePiaStudentsInput) {
   }
 }
 
-export async function deletePiaStudents(data: { id: number; version: number }) {
+export async function deletePiaStudents(input: RecordRef) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = recordRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -119,18 +139,19 @@ export async function deletePiaStudents(data: { id: number; version: number }) {
   }
 }
 
-type BulkDeletePiaStudentsInput = {
-  id: number;
-  version: number;
-}[];
+type BulkDeletePiaStudentsInput = RecordRef[];
 
-export async function bulkDeletePiaStudents(
-  records: BulkDeletePiaStudentsInput,
-) {
+export async function bulkDeletePiaStudents(input: BulkDeletePiaStudentsInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = recordRefsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, message: invalidInput(parsed.error) };
+  }
+  const records = parsed.data;
 
   try {
     if (!records || records.length === 0) {

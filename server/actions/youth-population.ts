@@ -8,23 +8,40 @@ import { getEditorSession } from "@/lib/auth-helper";
 import { and, DrizzleQueryError, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { DatabaseError } from "pg";
+import {
+  invalidInput,
+  recordRefSchema,
+  recordRefsSchema,
+  type RecordRef,
+  requiredText,
+  wholeNumber,
+  yearNumber,
+} from "@/lib/validations/action-input";
+import z from "zod";
 
-type CreateYouthPopulationInput = {
-  lga: string;
-  totalPopulation: number;
-  youthPopulation: number;
-  year: number;
-  maleYouth: number;
-  femaleYouth: number;
-  urbanYouth: number;
-  ruralYouth: number;
-};
+const createYouthPopulationSchema = z.object({
+  lga: requiredText,
+  totalPopulation: wholeNumber,
+  youthPopulation: wholeNumber,
+  year: yearNumber,
+  maleYouth: wholeNumber,
+  femaleYouth: wholeNumber,
+  urbanYouth: wholeNumber,
+  ruralYouth: wholeNumber,
+});
+type CreateYouthPopulationInput = z.infer<typeof createYouthPopulationSchema>;
 
-export async function createYouthPopulation(data: CreateYouthPopulationInput) {
+export async function createYouthPopulation(input: CreateYouthPopulationInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = createYouthPopulationSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const [row] = await db.insert(youthPopulation).values(data).returning();
@@ -45,24 +62,20 @@ export async function createYouthPopulation(data: CreateYouthPopulationInput) {
   }
 }
 
-type UpdateYouthPopulationInput = {
-  id: number;
-  lga: string;
-  totalPopulation: number;
-  youthPopulation: number;
-  year: number;
-  maleYouth: number;
-  femaleYouth: number;
-  urbanYouth: number;
-  ruralYouth: number;
-  version: number;
-};
+const updateYouthPopulationSchema = createYouthPopulationSchema.extend(recordRefSchema.shape);
+type UpdateYouthPopulationInput = z.infer<typeof updateYouthPopulationSchema>;
 
-export async function updateYouthPopulation(data: UpdateYouthPopulationInput) {
+export async function updateYouthPopulation(input: UpdateYouthPopulationInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = updateYouthPopulationSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   //   const parsed = updateYouthPopulationSchema.safeParse(rawData);
 
@@ -110,14 +123,17 @@ export async function updateYouthPopulation(data: UpdateYouthPopulationInput) {
   }
 }
 
-export async function deleteYouthPopulation(data: {
-  id: number;
-  version: number;
-}) {
+export async function deleteYouthPopulation(input: RecordRef) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   //   const parsed = deleteYouthPopulationSchema.safeParse(rawData);
 
@@ -154,18 +170,19 @@ export async function deleteYouthPopulation(data: {
   }
 }
 
-type BulkDeleteYouthPopulationInput = {
-  id: number;
-  version: number;
-}[];
+type BulkDeleteYouthPopulationInput = RecordRef[];
 
-export async function bulkDeleteYouthPopulation(
-  records: BulkDeleteYouthPopulationInput,
-) {
+export async function bulkDeleteYouthPopulation(input: BulkDeleteYouthPopulationInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = recordRefsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, message: invalidInput(parsed.error) };
+  }
+  const records = parsed.data;
 
   try {
     if (!records || records.length === 0) {

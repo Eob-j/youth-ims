@@ -9,26 +9,43 @@ import { nscParticipantImportSchema } from "@/lib/validations/nsc-participants";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import z from "zod";
+import {
+  invalidInput,
+  recordRefSchema,
+  recordRefsSchema,
+  type RecordRef,
+  requiredText,
+  wholeNumber,
+  isoDate,
+} from "@/lib/validations/action-input";
+import { NSC_GENDERS, NSC_STATUSES } from "@/lib/schema/nsc-participants";
 
-type CreateNscParticipantInput = {
-  name: string;
-  age: number;
-  gender: "Male" | "Female";
-  region: string;
-  category: string;
-  sport: string;
-  level: string;
-  status: "Active" | "Inactive" | "Retired";
-  achievements?: string;
-  dateRegistered: string;
-  contact?: string;
-};
+const createNscParticipantSchema = z.object({
+  name: requiredText,
+  age: wholeNumber,
+  gender: z.enum(NSC_GENDERS),
+  region: requiredText,
+  category: requiredText,
+  sport: requiredText,
+  level: requiredText,
+  status: z.enum(NSC_STATUSES),
+  achievements: z.string().optional(),
+  dateRegistered: isoDate,
+  contact: z.string().optional(),
+});
+type CreateNscParticipantInput = z.infer<typeof createNscParticipantSchema>;
 
-export async function createNscParticipant(data: CreateNscParticipantInput) {
+export async function createNscParticipant(input: CreateNscParticipantInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = createNscParticipantSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const [row] = await db.insert(nscParticipants).values(data).returning();
@@ -40,16 +57,20 @@ export async function createNscParticipant(data: CreateNscParticipantInput) {
   }
 }
 
-type UpdateNscParticipantInput = CreateNscParticipantInput & {
-  id: number;
-  version: number;
-};
+const updateNscParticipantSchema = createNscParticipantSchema.extend(recordRefSchema.shape);
+type UpdateNscParticipantInput = z.infer<typeof updateNscParticipantSchema>;
 
-export async function updateNscParticipant(data: UpdateNscParticipantInput) {
+export async function updateNscParticipant(input: UpdateNscParticipantInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = updateNscParticipantSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -87,11 +108,17 @@ export async function updateNscParticipant(data: UpdateNscParticipantInput) {
   }
 }
 
-export async function deleteNscParticipant(data: { id: number; version: number }) {
+export async function deleteNscParticipant(input: RecordRef) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -116,13 +143,17 @@ export async function deleteNscParticipant(data: { id: number; version: number }
   }
 }
 
-export async function bulkDeleteNscParticipants(
-  records: { id: number; version: number }[],
-) {
+export async function bulkDeleteNscParticipants(input: RecordRef[]) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefsSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const records = parsed.data;
 
   if (!records || records.length === 0) {
     return fail("No records provided for deletion.");

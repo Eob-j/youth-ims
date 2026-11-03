@@ -9,25 +9,42 @@ import { nycActivityImportSchema } from "@/lib/validations/nyc-activities";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import z from "zod";
+import {
+  invalidInput,
+  recordRefSchema,
+  recordRefsSchema,
+  type RecordRef,
+  requiredText,
+  wholeNumber,
+  yearNumber,
+} from "@/lib/validations/action-input";
+import { NYC_ACTIVITY_STATUSES } from "@/lib/schema/nyc-activities";
 
-type CreateNycActivityInput = {
-  activityName: string;
-  category: string;
-  region: string;
-  year: number;
-  beneficiaries: number;
-  male: number;
-  female: number;
-  fundingPartner: string;
-  description: string;
-  status: "Completed" | "Ongoing" | "Planned";
-};
+const createNycActivitySchema = z.object({
+  activityName: requiredText,
+  category: requiredText,
+  region: requiredText,
+  year: yearNumber,
+  beneficiaries: wholeNumber,
+  male: wholeNumber,
+  female: wholeNumber,
+  fundingPartner: requiredText,
+  description: requiredText,
+  status: z.enum(NYC_ACTIVITY_STATUSES),
+});
+type CreateNycActivityInput = z.infer<typeof createNycActivitySchema>;
 
-export async function createNycActivity(data: CreateNycActivityInput) {
+export async function createNycActivity(input: CreateNycActivityInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = createNycActivitySchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const [row] = await db.insert(nycActivities).values(data).returning();
@@ -39,16 +56,20 @@ export async function createNycActivity(data: CreateNycActivityInput) {
   }
 }
 
-type UpdateNycActivityInput = CreateNycActivityInput & {
-  id: number;
-  version: number;
-};
+const updateNycActivitySchema = createNycActivitySchema.extend(recordRefSchema.shape);
+type UpdateNycActivityInput = z.infer<typeof updateNycActivitySchema>;
 
-export async function updateNycActivity(data: UpdateNycActivityInput) {
+export async function updateNycActivity(input: UpdateNycActivityInput) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = updateNycActivitySchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -85,11 +106,17 @@ export async function updateNycActivity(data: UpdateNycActivityInput) {
   }
 }
 
-export async function deleteNycActivity(data: { id: number; version: number }) {
+export async function deleteNycActivity(input: RecordRef) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -114,13 +141,17 @@ export async function deleteNycActivity(data: { id: number; version: number }) {
   }
 }
 
-export async function bulkDeleteNycActivities(
-  records: { id: number; version: number }[],
-) {
+export async function bulkDeleteNycActivities(input: RecordRef[]) {
   const session = await getEditorSession();
   if (!session) {
     return fail("Unauthorized");
   }
+
+  const parsed = recordRefsSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const records = parsed.data;
 
   if (!records || records.length === 0) {
     return fail("No records provided for deletion.");

@@ -6,23 +6,38 @@ import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
 import { and, DrizzleQueryError, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import {
+  invalidInput,
+  recordRefSchema,
+  recordRefsSchema,
+  type RecordRef,
+  requiredText,
+  wholeNumber,
+  yearNumber,
+} from "@/lib/validations/action-input";
+import z from "zod";
 
-type CreateHumanTraffickingInput = {
-  lga: string;
-  year: number;
-  total: number;
-  male: number;
-  female: number;
-  ageGroup: string;
-};
+const createHumanTraffickingSchema = z.object({
+  lga: requiredText,
+  year: yearNumber,
+  total: wholeNumber,
+  male: wholeNumber,
+  female: wholeNumber,
+  ageGroup: requiredText,
+});
+type CreateHumanTraffickingInput = z.infer<typeof createHumanTraffickingSchema>;
 
-export async function createHumanTrafficking(
-  data: CreateHumanTraffickingInput,
-) {
+export async function createHumanTrafficking(input: CreateHumanTraffickingInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = createHumanTraffickingSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const [row] = await db.insert(humanTrafficking).values(data).returning();
@@ -43,24 +58,20 @@ export async function createHumanTrafficking(
   }
 }
 
-type UpdateHumanTraffickingInput = {
-  id: number;
-  lga: string;
-  year: number;
-  total: number;
-  male: number;
-  female: number;
-  ageGroup: string;
-  version: number;
-};
+const updateHumanTraffickingSchema = createHumanTraffickingSchema.extend(recordRefSchema.shape);
+type UpdateHumanTraffickingInput = z.infer<typeof updateHumanTraffickingSchema>;
 
-export async function updateHumanTrafficking(
-  data: UpdateHumanTraffickingInput,
-) {
+export async function updateHumanTrafficking(input: UpdateHumanTraffickingInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = updateHumanTraffickingSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   try {
     const result = await db
@@ -93,14 +104,17 @@ export async function updateHumanTrafficking(
   }
 }
 
-export async function deleteHumanTrafficking(data: {
-  id: number;
-  version: number;
-}) {
+export async function deleteHumanTrafficking(input: RecordRef) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = recordRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
 
   const { id, version } = data;
 
@@ -127,18 +141,19 @@ export async function deleteHumanTrafficking(data: {
   }
 }
 
-type BulkDeleteHumanTraffickingInput = {
-  id: number;
-  version: number;
-}[];
+type BulkDeleteHumanTraffickingInput = RecordRef[];
 
-export async function bulkDeleteHumanTrafficking(
-  records: BulkDeleteHumanTraffickingInput,
-) {
+export async function bulkDeleteHumanTrafficking(input: BulkDeleteHumanTraffickingInput) {
   const session = await getEditorSession();
   if (!session) {
     throw new Error("Unauthorized");
   }
+
+  const parsed = recordRefsSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, message: invalidInput(parsed.error) };
+  }
+  const records = parsed.data;
 
   try {
     if (!records || records.length === 0) {
