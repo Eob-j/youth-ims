@@ -213,7 +213,7 @@ export function ProfileClient({ profile }: ProfileClientProps) {
                 <KeyRound className="h-4 w-4" />
                 Change Password
               </CardTitle>
-              <CardDescription>Use a strong password with at least 8 characters.</CardDescription>
+              <CardDescription>Use a strong password between 8 and 20 characters.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">

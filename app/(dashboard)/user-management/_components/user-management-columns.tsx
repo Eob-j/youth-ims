@@ -14,13 +14,14 @@ import {
 import { Role } from "@/lib/types";
 import { retrySendInviteEmail } from "@/server/actions/user-management";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Edit, MoreHorizontal, Trash2 } from "lucide-react";
+import { Edit, KeyRound, MoreHorizontal, Trash2 } from "lucide-react";
 
 interface userManagementColumnsProps {
   handleEdit: (item: userType) => void;
   handleDelete: (item: userType) => void;
   canManageActions: boolean;
   handleRetrySendInvite: (item: userType) => void;
+  handleResetPassword: (item: userType) => void;
 }
 
 export const getColumns = ({
@@ -28,6 +29,7 @@ export const getColumns = ({
   handleDelete,
   canManageActions,
   handleRetrySendInvite,
+  handleResetPassword,
 }: userManagementColumnsProps): ColumnDef<userType>[] => {
   const columns: ColumnDef<userType>[] = [
     {
@@ -97,6 +99,10 @@ export const getColumns = ({
                 <DropdownMenuItem onClick={() => handleRetrySendInvite(item)}>
                   <Edit className="mr-2 h-4 w-4" />
                   Send Invite
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleResetPassword(item)}>
+                  <KeyRound className="mr-2 h-4 w-4" />
+                  Send Password Reset
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem

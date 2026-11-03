@@ -54,6 +54,10 @@ export async function updateCurrentUserPassword(data: {
     return fail("New password must be at least 8 characters.");
   }
 
+  if (data.newPassword.length > 20) {
+    return fail("New password must be at most 20 characters.");
+  }
+
   if (data.newPassword !== data.confirmPassword) {
     return fail("New password and confirmation do not match.");
   }

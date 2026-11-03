@@ -37,6 +37,7 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -129,6 +130,20 @@ export function LoginForm({
                           </FormItem>
                         )}
                       />
+                      <button
+                        type="button"
+                        className="self-end text-sm text-blue-600 hover:underline"
+                        onClick={() => setShowForgotPassword((prev) => !prev)}
+                      >
+                        Forgot password?
+                      </button>
+                      {showForgotPassword && (
+                        <p className="rounded-md bg-blue-50 p-3 text-sm text-gray-700">
+                          Please contact your system administrator to reset
+                          your password. They will send you an email with a
+                          link to choose a new one.
+                        </p>
+                      )}
                     </div>
                   </div>
                   <Button

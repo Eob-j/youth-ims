@@ -21,7 +21,7 @@ export function UserManagementTable({
   users,
   canEditData,
 }: UserManagementTableProps) {
-  const { setSelectedItem, setEditOpen, setDeleteOpen } =
+  const { setSelectedItem, setEditOpen, setDeleteOpen, setResetPasswordOpen } =
     useUserManagementStore();
 
   const handleEdit = (item: userType) => {
@@ -70,6 +70,10 @@ export function UserManagementTable({
       setDeleteOpen(true);
     },
     handleRetrySendInvite,
+    handleResetPassword: (item) => {
+      setSelectedItem(item);
+      setResetPasswordOpen(true);
+    },
   });
 
   return (

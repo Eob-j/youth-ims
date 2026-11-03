@@ -28,6 +28,7 @@ import { UserManagementForm } from "./user-management-form";
 import {
   createUser,
   deleteUser,
+  sendPasswordResetEmail,
   updateUser,
 } from "@/server/actions/user-management";
 import { Loader } from "lucide-react";
@@ -41,6 +42,7 @@ export function UserManagementDialogs() {
       <UserCreateDialog />
       <UserEditDialog key={selectedItem?.id} />
       <UserDeleteDialog />
+      <UserResetPasswordDialog />
     </>
   );
 }
@@ -227,6 +229,69 @@ function UserDeleteDialog() {
               </div>
             ) : (
               "Delete"
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function UserResetPasswordDialog() {
+  const {
+    resetPasswordOpen,
+    setResetPasswordOpen,
+    selectedItem,
+    setSelectedItem,
+  } = useUserManagementStore();
+  const [isSending, setIsSending] = useState(false);
+
+  async function handleSend() {
+    if (!selectedItem) return;
+    setIsSending(true);
+    const res = await sendPasswordResetEmail(selectedItem.id);
+    if (res.success) {
+      toast.success(`Password reset email sent to ${selectedItem.email}.`, {
+        richColors: true,
+      });
+      setIsSending(false);
+      setResetPasswordOpen(false);
+      setSelectedItem(null);
+    } else {
+      toast.error(res.error, {
+        richColors: true,
+      });
+      setIsSending(false);
+    }
+  }
+
+  return (
+    <AlertDialog open={resetPasswordOpen} onOpenChange={setResetPasswordOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Send password reset email?</AlertDialogTitle>
+          <AlertDialogDescription>
+            A password reset link will be emailed to &quot;
+            {selectedItem?.email}&quot;. The user will choose their own new
+            password. The link expires in 1 hour.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+            disabled={isSending}
+          >
+            {isSending ? (
+              <div className="flex items-center">
+                <Loader className="mr-2 h-4 w-4 animate-spin" />
+                Sending...
+              </div>
+            ) : (
+              "Send Reset Email"
             )}
           </AlertDialogAction>
         </AlertDialogFooter>

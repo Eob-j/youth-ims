@@ -8,7 +8,7 @@ import { fail, ok } from "@/lib/action-result-helper";
 import { headers } from "next/headers";
 import { Role } from "@/lib/types";
 import { db } from "@/db";
-import { verifications } from "@/auth-schema";
+import { users, verifications } from "@/auth-schema";
 import { env } from "@/env";
 import { Resend } from "resend";
 import nodemailer from "nodemailer";
@@ -179,6 +179,48 @@ export async function bulkDeleteUsers(data: BulkDeleteUsersInput) {
       success: false,
       message: "An error occurred while deleting the users.",
     };
+  }
+}
+
+export async function sendPasswordResetEmail(userId: string) {
+  const session = await getServerSideSession();
+
+  if (!session) {
+    return fail("Unauthorized");
+  }
+
+  if (session.user.role !== "admin") {
+    return fail("Unauthorized");
+  }
+
+  if (session.user.id === userId) {
+    return fail(
+      "You cannot reset your own password here. Use the Security tab on your profile instead.",
+    );
+  }
+
+  try {
+    const [user] = await db
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user) {
+      return fail("User not found.");
+    }
+
+    await auth.api.requestPasswordReset({
+      body: {
+        email: user.email,
+        redirectTo: "/reset-password",
+      },
+    });
+
+    return ok("Password reset email sent.");
+  } catch (error) {
+    console.error(error);
+    return fail("An error occurred while sending the password reset email.");
   }
 }
 

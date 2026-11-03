@@ -11,10 +11,12 @@ interface UserManagementStore {
   editOpen: boolean;
   deleteOpen: boolean;
   createOpen: boolean;
+  resetPasswordOpen: boolean;
 
   setEditOpen: (open: boolean) => void;
   setDeleteOpen: (open: boolean) => void;
   setCreateOpen: (open: boolean) => void;
+  setResetPasswordOpen: (open: boolean) => void;
 }
 
 export const useUserManagementStore = create<UserManagementStore>((set) => ({
@@ -23,6 +25,7 @@ export const useUserManagementStore = create<UserManagementStore>((set) => ({
   editOpen: false,
   deleteOpen: false,
   createOpen: false,
+  resetPasswordOpen: false,
 
   setData: (data) => set({ data }),
   setSelectedItem: (item) => {
@@ -41,4 +44,9 @@ export const useUserManagementStore = create<UserManagementStore>((set) => ({
       selectedItem: open ? state.selectedItem : null,
     })),
   setCreateOpen: (open) => set({ createOpen: open }),
+  setResetPasswordOpen: (open) =>
+    set((state) => ({
+      resetPasswordOpen: open,
+      selectedItem: open ? state.selectedItem : null,
+    })),
 }));
