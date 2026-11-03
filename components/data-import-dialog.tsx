@@ -57,12 +57,15 @@ interface DataImportDialogProps {
       }
   >;
   onImportComplete?: () => void;
+  // Optional guidance shown above the file picker, e.g. the required columns.
+  instructions?: React.ReactNode;
 }
 
 export function DataImportDialog({
   tableName,
   serverActionHander,
   onImportComplete,
+  instructions,
 }: DataImportDialogProps) {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -152,6 +155,7 @@ export function DataImportDialog({
         </DialogDescription>
 
         <div className="space-y-4 py-4">
+          {instructions}
           <Label htmlFor="youth-population-file-upload">Select CSV File</Label>
           <input
             ref={fileInputRef}

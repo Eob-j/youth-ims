@@ -19,24 +19,33 @@ export const youthPopulationImportConfig: ImportConfig<any> = {
 
   conflictStrategy: "error",
 
+  // Same labels and order as the table in the UI. Files may use either the
+  // label ("Total Population") or the key ("totalPopulation").
   columns: {
-    lga: { type: "required" },
+    lga: { type: "required", header: "LGA" },
+    totalPopulation: { type: "required", header: "Total Population" },
+
+    // Always male + female youth, so it can be left out of the file.
+    youthPopulation: {
+      type: "computed-if-missing",
+      header: "Youth Population",
+      compute: (row: any) => Number(row.maleYouth) + Number(row.femaleYouth),
+    },
+
+    maleYouth: { type: "required", header: "Male Youth" },
+    femaleYouth: { type: "required", header: "Female Youth" },
+    urbanYouth: { type: "required", header: "Urban Youth" },
+    ruralYouth: { type: "required", header: "Rural Youth" },
 
     year: {
-      type: "computed-if-missing",
+      type: "required",
+      header: "Year",
       compute: () => new Date().getFullYear(),
     },
 
-    totalPopulation: { type: "required" },
-    youthPopulation: { type: "required" },
-
-    maleYouth: { type: "required" },
-    femaleYouth: { type: "required" },
-    urbanYouth: { type: "required" },
-    ruralYouth: { type: "required" },
-
     youthShare: {
       type: "computed",
+      header: "Youth Share (%)",
       compute: (row: any) => {
         if (!row.totalPopulation) return 0;
         return ((row.youthPopulation / row.totalPopulation) * 100).toFixed(2);

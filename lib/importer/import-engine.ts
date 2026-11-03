@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { parseSpreadsheet } from "./parse-file";
-import { processColumns } from "./column-processing";
+import { mapHeaders, processColumns } from "./column-processing";
 import { ImportConfig } from "./types";
 import { revalidatePath } from "next/cache";
 import { DrizzleQueryError } from "drizzle-orm";
@@ -40,7 +40,11 @@ export async function importSpreadsheet<T>({
     const rawRow = rawRows[i];
 
     // 1️⃣ Process computed columns
-    const processedRow = processColumns(rawRow, config, context);
+    const processedRow = processColumns(
+      mapHeaders(rawRow, config),
+      config,
+      context,
+    );
 
     // 2️⃣ Normalize headers (trim keys)
     const normalized = Object.fromEntries(

@@ -1,7 +1,8 @@
 import type React from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Controller, useFormContext } from "react-hook-form";
+import { useEffect } from "react";
+import { Controller, useFormContext, useWatch } from "react-hook-form";
 import {
   Field,
   FieldDescription,
@@ -13,7 +14,25 @@ import { youthPopulationSchema } from "@/lib/validations/youth-population";
 export type YouthPopulationFormValues = z.infer<typeof youthPopulationSchema>;
 
 export function YouthPopulationForm() {
-  const { control } = useFormContext<YouthPopulationFormValues>();
+  const { control, setValue, formState } =
+    useFormContext<YouthPopulationFormValues>();
+  const [maleYouth, femaleYouth] = useWatch({
+    control,
+    name: ["maleYouth", "femaleYouth"],
+  });
+
+  // Youth population is always male + female youth, so it is calculated
+  // rather than typed in. It stays empty until both values are entered.
+  useEffect(() => {
+    const bothEntered = Boolean(maleYouth) && Boolean(femaleYouth);
+    const total = bothEntered
+      ? String(Number(maleYouth) + Number(femaleYouth))
+      : "";
+    setValue("youthPopulation", total, {
+      shouldValidate: formState.isSubmitted,
+    });
+  }, [maleYouth, femaleYouth, setValue, formState.isSubmitted]);
+
   return (
     <div className="grid grid-cols-2 gap-4">
       {/* LGA */}
@@ -62,8 +81,13 @@ export function YouthPopulationForm() {
               {...field}
               id="youthPopulation"
               type="number"
-              onChange={(e) => field.onChange(e.target.value)}
+              readOnly
+              tabIndex={-1}
+              className="bg-muted"
             />
+            <FieldDescription>
+              * Calculated automatically: Male Youth + Female Youth.
+            </FieldDescription>
             {fieldState.error && (
               <FieldError>{fieldState.error.message}</FieldError>
             )}

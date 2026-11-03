@@ -7,6 +7,7 @@ import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { importYouthPoplationData } from "@/feature/import-csv/action";
+import { YouthPopulationImportInstructions } from "./youth-population-import-instructions";
 
 export default function YouthPopulationActions() {
   const { createOpen, setCreateOpen } = useYouthPopulationStore();
@@ -15,6 +16,7 @@ export default function YouthPopulationActions() {
       <DataImportDialog
         tableName="youth_population"
         serverActionHander={importYouthPoplationData}
+        instructions={<YouthPopulationImportInstructions />}
       />
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogTrigger asChild>

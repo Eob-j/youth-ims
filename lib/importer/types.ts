@@ -8,6 +8,8 @@ export type ColumnType =
 
 export type ColumnDefinition<T = any> = {
   type: ColumnType;
+  // The column's label in the table UI. Files may use it instead of the key.
+  header?: string;
   compute?: (row: any, context?: any) => any;
   transform?: (value: any) => any;
 };
