@@ -17,7 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { signIn } from "@/server/actions/auth-actions";
+import { authClient } from "@/lib/auth-client";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
@@ -51,13 +51,22 @@ export function LoginForm({
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
 
-    const { success, message } = await signIn(values.email, values.password);
+    // Sign in over HTTP so Better Auth's rate limiter applies; it does not run
+    // for server-side auth.api calls.
+    const { error } = await authClient.signIn.email({
+      email: values.email,
+      password: values.password,
+    });
 
-    if (success) {
-      toast.success(message as string);
-      router.push("/dashboard");
+    if (error) {
+      toast.error(
+        error.status === 429
+          ? "Too many sign-in attempts. Please wait a moment and try again."
+          : error.message || "An unknown error occurred.",
+      );
     } else {
-      toast.error(message as string);
+      toast.success("Signed in successfully.");
+      router.push("/dashboard");
     }
 
     setIsLoading(false);
