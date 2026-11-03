@@ -10,8 +10,6 @@ import { Role } from "@/lib/types";
 import { db } from "@/db";
 import { users, verifications } from "@/auth-schema";
 import { env } from "@/env";
-import { Resend } from "resend";
-import nodemailer from "nodemailer";
 import { transporter } from "@/lib/nodemailer/client";
 import { eq } from "drizzle-orm";
 
@@ -239,11 +237,6 @@ async function generateAndStoreToken({ userId }: { userId: string }) {
   return data[0];
 }
 
-const baseUrl =
-  process.env.NODE_ENV === "production"
-    ? "https://doysmoys.gov.gm"
-    : "http://localhost:3000";
-
 async function sendInviteEmail({
   email,
   token,
@@ -253,22 +246,12 @@ async function sendInviteEmail({
   token: string;
   name: string;
 }) {
+  // Same base URL as Better Auth's reset links, so one setting controls both.
+  const baseUrl = env.BETTER_AUTH_URL.replace(/\/+$/, "");
   const verifyUrl = `${baseUrl}/api/verify-email?token=${token}`;
 
-  //   const resend = new Resend(env.RESEND_API_KEY);
-  //   await resend.emails.send({
-  //     from: `${env.EMAIL_SENDER_NAME} <${env.EMAIL_SENDER_ADDRESS}>`,
-  //     to: email,
-  //     subject: "You have been invited to join the Gambia Youth Data Dashboard",
-  //     html: `
-  //   <p>Hi ${name}, you've been invited to join the platform.</p>
-  //   <a href="${verifyUrl}">Click here to verify your email & get started</a>
-  //   <p>This link expires in 24 hours.</p>
-  // `,
-  //   });
-
   await transporter.sendMail({
-    from: `${env.EMAIL_SENDER_NAME} <dirudeen22@gmail.com>`,
+    from: `${env.EMAIL_SENDER_NAME} <${env.GMAIL_USER}>`,
     to: email,
     subject: "You have been invited to join the Gambia Youth Data Dashboard",
     html: `
