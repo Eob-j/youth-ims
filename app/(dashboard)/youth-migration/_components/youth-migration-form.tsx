@@ -1,11 +1,20 @@
 "use client";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
+import { useCalculatedTotal } from "@/hooks/use-calculated-total";
 import { Input } from "@/components/ui/input";
 import type { YouthMigrationFormValues } from "@/lib/validations/youth-migration";
 import { Controller, useFormContext } from "react-hook-form";
 
 export function YouthMigrationForm() {
   const { control } = useFormContext<YouthMigrationFormValues>();
+  // Total is always male + female (a database rule), so it is calculated
+  // rather than typed in.
+  useCalculatedTotal<YouthMigrationFormValues>("total", ["male", "female"]);
   return (
     <div className="grid grid-cols-2 gap-4">
       <Controller
@@ -31,8 +40,13 @@ export function YouthMigrationForm() {
               {...field}
               id="total"
               type="number"
-              onChange={(e) => field.onChange(e.target.value)}
+              readOnly
+              tabIndex={-1}
+              className="bg-muted"
             />
+            <FieldDescription>
+              * Calculated automatically: Male + Female.
+            </FieldDescription>
             {fieldState.error && (
               <FieldError>{fieldState.error.message}</FieldError>
             )}

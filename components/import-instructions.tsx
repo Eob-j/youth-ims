@@ -6,38 +6,25 @@ import { cn } from "@/lib/utils";
 import { Download, Info } from "lucide-react";
 import type React from "react";
 
-// The columns to fill in, with the same labels and order as the table in the
-// UI. Calculated columns are left out. Must match the headers in
-// youthPopulationImportConfig.
-const headers = [
-  "LGA",
-  "Total Population",
-  "Male Youth",
-  "Female Youth",
-  "Urban Youth",
-  "Rural Youth",
-  "Year",
-];
+export interface ImportColumn {
+  // The column header, as shown in the table on screen.
+  name: string;
+  description: React.ReactNode;
+}
 
-const columns = [
-  { name: "LGA", description: "LGA name, e.g. Banjul. Required." },
-  {
-    name: "Total Population",
-    description: "Total population of the LGA. Required.",
-  },
-  {
-    name: "Male Youth, Female Youth",
-    description:
-      "Required. Added together to give Youth Population, which cannot be more than Total Population.",
-  },
-  {
-    name: "Urban Youth, Rural Youth",
-    description: "Required. Must add up to Male Youth + Female Youth.",
-  },
-  { name: "Year", description: "e.g. 2024. Required." },
-];
+interface ImportInstructionsProps {
+  // The columns to fill in, in file order. Calculated columns are left out.
+  columns: ImportColumn[];
+  // What is calculated automatically and should be left out of the file.
+  calculated?: React.ReactNode;
+  // What makes the database reject the whole file, e.g. a duplicate record.
+  rejectsWholeFile?: React.ReactNode;
+  hasDates?: boolean;
+  exampleRow: string;
+  templateFileName: string;
+}
 
-function Code({
+export function Code({
   className,
   children,
 }: {
@@ -54,17 +41,26 @@ function Code({
 }
 
 // Header row only, so an unedited template can never import sample data.
-function downloadTemplate() {
+function downloadTemplate(headers: string[], fileName: string) {
   const blob = new Blob([`${headers.join(",")}\n`], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "youth-population-template.csv";
+  link.download = fileName;
   link.click();
   URL.revokeObjectURL(url);
 }
 
-export function YouthPopulationImportInstructions() {
+export function ImportInstructions({
+  columns,
+  calculated,
+  rejectsWholeFile,
+  hasDates = false,
+  exampleRow,
+  templateFileName,
+}: ImportInstructionsProps) {
+  const headers = columns.map((column) => column.name);
+
   return (
     <Alert className="max-h-72 overflow-y-auto">
       <Info className="h-4 w-4" />
@@ -73,7 +69,7 @@ export function YouthPopulationImportInstructions() {
         <ol className="list-decimal space-y-1 pl-4">
           <li>
             Save the file as <strong>CSV (comma delimited)</strong>. Put the
-            column names in the first row, then one row per LGA and year.
+            column names in the first row, then one record per row.
           </li>
           <li>
             Use these column names, in the same order as the table on screen.
@@ -90,40 +86,45 @@ export function YouthPopulationImportInstructions() {
           ))}
         </ul>
 
-        <p>
-          <strong>Calculated automatically, leave these out:</strong> Youth
-          Population (Male Youth + Female Youth) and Youth Share (%) (Youth
-          Population ÷ Total Population × 100). If your file has them, for
-          example an exported file, Youth Share is ignored and Youth Population
-          must equal Male Youth + Female Youth. The ID, version and
-          created/updated dates are also set for you.
-        </p>
+        {calculated && (
+          <p>
+            <strong>Calculated automatically, leave out:</strong> {calculated}
+          </p>
+        )}
 
         <ul className="list-disc space-y-1 pl-4">
           <li>
             Use whole numbers with no commas or spaces: <Code>10817</Code>,
             not <Code>10,817</Code>.
           </li>
+          {hasDates && (
+            <li>
+              Write dates as <Code>YYYY-MM-DD</Code>, e.g.{" "}
+              <Code>2024-01-15</Code>. Rows with other date formats are
+              skipped.
+            </li>
+          )}
           <li>
-            Rows with missing or invalid values are skipped and the rest are
-            imported.
+            Rows with missing values, or values that aren&apos;t allowed, are
+            skipped and the rest are imported.
           </li>
-          <li>
-            If any row breaks a total rule above, or repeats an LGA and year
-            that already exists, <strong>nothing is imported</strong>. Fix the
-            file and try again.
-          </li>
+          {rejectsWholeFile && (
+            <li>
+              If any row {rejectsWholeFile}, <strong>nothing is imported</strong>
+              . Fix the file and try again.
+            </li>
+          )}
         </ul>
 
         <p>
-          Example row: <Code>Banjul,26461,5123,5694,10817,0,2024</Code>
+          Example row: <Code className="break-all">{exampleRow}</Code>
         </p>
 
         <Button
           type="button"
           variant="outline"
           size="sm"
-          onClick={downloadTemplate}
+          onClick={() => downloadTemplate(headers, templateFileName)}
         >
           <Download className="mr-2 h-4 w-4" />
           Download template

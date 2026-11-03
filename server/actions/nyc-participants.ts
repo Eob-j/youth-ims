@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { nycParticipants } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
-import { parseSpreadsheet } from "@/lib/importer/parse-file";
+import { parseSpreadsheet, toIsoDate } from "@/lib/importer/parse-file";
 import { nycParticipantImportSchema } from "@/lib/validations/nyc-participants";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -217,7 +217,7 @@ export async function importNycParticipantsData(formData: FormData) {
       status: String(getValue(row, ["status"]) ?? "Active").trim(),
       achievements: String(getValue(row, ["achievements"]) ?? "").trim() || null,
       dateRegistered:
-        String(getValue(row, ["date_registered", "dateRegistered"]) ?? "").trim(),
+        toIsoDate(getValue(row, ["date_registered", "dateRegistered"])) ?? "",
       contact: String(getValue(row, ["contact"]) ?? "").trim() || null,
     };
 

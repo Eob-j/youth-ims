@@ -1,13 +1,13 @@
 "use client";
 import { CanEditWrapper } from "@/components/can-edit-wrapper";
 import { DataImportDialog } from "@/components/data-import-dialog";
+import { YouthPopulationImportInstructions } from "@/feature/import-csv/instructions";
 import { Dialog } from "@/components/ui/dialog";
 import { useYouthPopulationStore } from "@/store/youth-population-store";
 import { DialogTrigger } from "@radix-ui/react-dialog";
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { importYouthPoplationData } from "@/feature/import-csv/action";
-import { YouthPopulationImportInstructions } from "./youth-population-import-instructions";
 
 export default function YouthPopulationActions() {
   const { createOpen, setCreateOpen } = useYouthPopulationStore();

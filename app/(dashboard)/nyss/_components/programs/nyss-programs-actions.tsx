@@ -1,6 +1,7 @@
 "use client";
 
 import { DataImportDialog } from "@/components/data-import-dialog";
+import { NyssProgramsImportInstructions } from "@/feature/import-csv/instructions";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { importNyssProgramsData } from "@/feature/import-csv/action";
@@ -27,6 +28,7 @@ export function NyssProgramsActions() {
       <DataImportDialog
         tableName="nyss_programs"
         serverActionHander={importNyssProgramsData}
+        instructions={<NyssProgramsImportInstructions />}
       />
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogTrigger asChild>

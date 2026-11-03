@@ -1,5 +1,6 @@
 "use client";
 import { DataImportDialog } from "@/components/data-import-dialog";
+import { HumanTraffickingImportInstructions } from "@/feature/import-csv/instructions";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { importHumanTraffickingData } from "@/feature/import-csv/action";
@@ -14,6 +15,7 @@ export function HumanTraffickingActions() {
       <DataImportDialog
         tableName="human_trafficking"
         serverActionHander={importHumanTraffickingData}
+        instructions={<HumanTraffickingImportInstructions />}
       />
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogTrigger asChild>

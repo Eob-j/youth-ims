@@ -1,4 +1,10 @@
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
+import { useCalculatedTotal } from "@/hooks/use-calculated-total";
 import { Input } from "@/components/ui/input";
 import { humanTraffickingSchema } from "@/lib/validations/human-trafficking";
 import type { HumanTraffickingFormValues } from "@/lib/validations/human-trafficking";
@@ -7,6 +13,9 @@ import z from "zod";
 
 export function HumanTraffickingForm() {
   const { control } = useFormContext<HumanTraffickingFormValues>();
+  // Total is always male + female (a database rule), so it is calculated
+  // rather than typed in.
+  useCalculatedTotal<HumanTraffickingFormValues>("total", ["male", "female"]);
   return (
     <div className="grid grid-cols-2 gap-4">
       <Controller
@@ -58,8 +67,13 @@ export function HumanTraffickingForm() {
               {...field}
               id="total"
               type="number"
-              onChange={(e) => field.onChange(e.target.value)}
+              readOnly
+              tabIndex={-1}
+              className="bg-muted"
             />
+            <FieldDescription>
+              * Calculated automatically: Male + Female.
+            </FieldDescription>
             {fieldState.error && (
               <FieldError>{fieldState.error.message}</FieldError>
             )}

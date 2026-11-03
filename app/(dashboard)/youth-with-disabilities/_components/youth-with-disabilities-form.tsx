@@ -1,4 +1,10 @@
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
+import { useCalculatedTotal } from "@/hooks/use-calculated-total";
 import { Input } from "@/components/ui/input";
 import { youthWithDisabilitiesSchema } from "@/lib/validations/youth-with-disablilties";
 import { Controller, useFormContext } from "react-hook-form";
@@ -9,6 +15,9 @@ export type YouthWithDisabilitiesFormValues = z.infer<
 
 export function YouthWithDisabilitiesForm() {
   const { control } = useFormContext<YouthWithDisabilitiesFormValues>();
+  // Total is always male + female (a database rule), so it is calculated
+  // rather than typed in.
+  useCalculatedTotal<YouthWithDisabilitiesFormValues>("total", ["male", "female"]);
   return (
     <div className="grid grid-cols-2 gap-4">
       <Controller
@@ -34,8 +43,13 @@ export function YouthWithDisabilitiesForm() {
               {...field}
               id="total"
               type="number"
-              onChange={(e) => field.onChange(e.target.value)}
+              readOnly
+              tabIndex={-1}
+              className="bg-muted"
             />
+            <FieldDescription>
+              * Calculated automatically: Male + Female.
+            </FieldDescription>
             {fieldState.error && (
               <FieldError>{fieldState.error.message}</FieldError>
             )}

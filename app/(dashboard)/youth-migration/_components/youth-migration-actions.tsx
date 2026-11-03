@@ -1,5 +1,6 @@
 "use client";
 import { DataImportDialog } from "@/components/data-import-dialog";
+import { YouthMigrationImportInstructions } from "@/feature/import-csv/instructions";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { useYouthMigrationStore } from "@/store/youth-migration-store";
@@ -14,6 +15,7 @@ export function YouthMigrationActions() {
       <DataImportDialog
         tableName="youth_migration"
         serverActionHander={importYouthMigrationData}
+        instructions={<YouthMigrationImportInstructions />}
       />
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogTrigger asChild>

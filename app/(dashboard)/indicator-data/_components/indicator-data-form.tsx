@@ -1,6 +1,11 @@
 "use client";
 
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,7 +15,7 @@ import {
   INDICATOR_REGIONS,
 } from "@/lib/schema/indicator-data";
 import type { IndicatorDataFormValues } from "@/lib/validations/indicator-data";
-import { Controller, useFormContext } from "react-hook-form";
+import { Controller, useFormContext, useWatch } from "react-hook-form";
 
 const categoryLabel: Record<string, string> = {
   finance: "Finance Access",
@@ -20,6 +25,9 @@ const categoryLabel: Record<string, string> = {
 
 export function IndicatorDataForm() {
   const { control } = useFormContext<IndicatorDataFormValues>();
+  // Display only: the server always saves total as male + female.
+  const [male, female] = useWatch({ control, name: ["male", "female"] });
+  const total = male && female ? String(Number(male) + Number(female)) : "";
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -122,6 +130,20 @@ export function IndicatorDataForm() {
           </Field>
         )}
       />
+      <Field>
+        <FieldLabel htmlFor="total">Total</FieldLabel>
+        <Input
+          id="total"
+          type="number"
+          value={total}
+          readOnly
+          tabIndex={-1}
+          className="bg-muted"
+        />
+        <FieldDescription>
+          * Calculated automatically: Male + Female.
+        </FieldDescription>
+      </Field>
       <Controller
         name="indicator"
         control={control}

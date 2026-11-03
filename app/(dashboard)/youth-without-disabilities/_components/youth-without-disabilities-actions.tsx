@@ -1,5 +1,6 @@
 "use client";
 import { DataImportDialog } from "@/components/data-import-dialog";
+import { YouthWithoutDisabilitiesImportInstructions } from "@/feature/import-csv/instructions";
 import { Dialog } from "@/components/ui/dialog";
 import { useYouthWithoutDisabilitiesStore } from "@/store/youth-without-disabilities-store";
 import { DialogTrigger } from "@radix-ui/react-dialog";
@@ -14,6 +15,7 @@ export function YouthWithoutDisabilitiesActions() {
       <DataImportDialog
         tableName="youth_without_disabilities"
         serverActionHander={importYouthWithoutDisabilitiesData}
+        instructions={<YouthWithoutDisabilitiesImportInstructions />}
       />
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogTrigger asChild>

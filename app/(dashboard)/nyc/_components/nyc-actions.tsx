@@ -1,6 +1,7 @@
 "use client";
 
 import { DataImportDialog } from "@/components/data-import-dialog";
+import { NycParticipantsImportInstructions } from "@/feature/import-csv/instructions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { importNycParticipantsData } from "@/feature/import-csv/action";
@@ -12,7 +13,7 @@ export function NycActions() {
 
   return (
     <div className="flex gap-2">
-      <DataImportDialog tableName="nyc_participants" serverActionHander={importNycParticipantsData} />
+      <DataImportDialog tableName="nyc_participants" serverActionHander={importNycParticipantsData} instructions={<NycParticipantsImportInstructions />} />
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogTrigger asChild>
           <Button>

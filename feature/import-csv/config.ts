@@ -12,7 +12,15 @@ import {
   youthWithDisabilities,
   youthWithoutDisabilities,
 } from "@/db/schema";
-import { ImportConfig } from "@/lib/importer/types";
+import { toIsoDate } from "@/lib/importer/parse-file";
+import { ColumnDefinition, ImportConfig } from "@/lib/importer/types";
+
+// For tables where the database requires total = male + female: the file may
+// leave Total out and it is filled in.
+const totalOfMaleAndFemale: ColumnDefinition = {
+  type: "computed-if-missing",
+  compute: (row: any) => Number(row.male) + Number(row.female),
+};
 
 export const youthPopulationImportConfig: ImportConfig<any> = {
   table: youthPopulation,
@@ -70,19 +78,20 @@ export const youthWithDisabilitiesImportConfig: ImportConfig<any> = {
 
   conflictStrategy: "error",
 
+  // Same labels and order as the table in the UI.
   columns: {
-    ageGroup: { type: "required" },
-    total: { type: "required" },
-    male: { type: "required" },
-    female: { type: "required" },
-    urban: { type: "required" },
-    rural: { type: "required" },
-    seeing: { type: "required" },
-    hearing: { type: "required" },
-    physical: { type: "required" },
-    learning: { type: "required" },
-    selfcare: { type: "required" },
-    speech: { type: "required" },
+    ageGroup: { type: "required", header: "Age Group" },
+    total: { ...totalOfMaleAndFemale, header: "Total" },
+    male: { type: "required", header: "Male" },
+    female: { type: "required", header: "Female" },
+    urban: { type: "required", header: "Urban" },
+    rural: { type: "required", header: "Rural" },
+    seeing: { type: "required", header: "Seeing" },
+    hearing: { type: "required", header: "Hearing" },
+    physical: { type: "required", header: "Physical" },
+    learning: { type: "required", header: "Learning" },
+    selfcare: { type: "required", header: "Self-care" },
+    speech: { type: "required", header: "Speech" },
   },
 
   schema: z.object({
@@ -107,13 +116,14 @@ export const youthWithoutDisabilitiesImportConfig: ImportConfig<any> = {
 
   conflictStrategy: "error",
 
+  // Same labels and order as the table in the UI.
   columns: {
-    ageGroup: { type: "required" },
-    total: { type: "required" },
-    male: { type: "required" },
-    female: { type: "required" },
-    urban: { type: "required" },
-    rural: { type: "required" },
+    ageGroup: { type: "required", header: "Age Group" },
+    total: { ...totalOfMaleAndFemale, header: "Total" },
+    male: { type: "required", header: "Male" },
+    female: { type: "required", header: "Female" },
+    urban: { type: "required", header: "Urban" },
+    rural: { type: "required", header: "Rural" },
   },
 
   schema: z.object({
@@ -131,13 +141,14 @@ export const humanTraffickingImportConfig: ImportConfig<any> = {
 
   conflictStrategy: "error",
 
+  // Same labels and order as the table in the UI.
   columns: {
-    lga: { type: "required" },
-    year: { type: "required" },
-    total: { type: "required" },
-    male: { type: "required" },
-    female: { type: "required" },
-    ageGroup: { type: "required" },
+    year: { type: "required", header: "Year" },
+    total: { ...totalOfMaleAndFemale, header: "Total" },
+    male: { type: "required", header: "Male" },
+    female: { type: "required", header: "Female" },
+    ageGroup: { type: "required", header: "Age Group" },
+    lga: { type: "required", header: "LGA" },
   },
 
   schema: z.object({
@@ -155,13 +166,14 @@ export const youthMigrationImportConfig: ImportConfig<any> = {
 
   conflictStrategy: "error",
 
+  // Same labels and order as the table in the UI.
   columns: {
-    year: { type: "required" },
-    total: { type: "required" },
-    male: { type: "required" },
-    female: { type: "required" },
-    origin: { type: "required" },
-    destination: { type: "required" },
+    year: { type: "required", header: "Year" },
+    total: { ...totalOfMaleAndFemale, header: "Total" },
+    male: { type: "required", header: "Male" },
+    female: { type: "required", header: "Female" },
+    origin: { type: "required", header: "Origin" },
+    destination: { type: "required", header: "Destination" },
   },
 
   schema: z.object({
@@ -206,80 +218,77 @@ function normalizeStatus(value: unknown) {
   }
 }
 
-function normalizeDate(value: unknown) {
-  console.log(value);
-
-  if (value === null || value === undefined || value === "") return null;
-
-  if (value instanceof Date) {
-    return value;
-  }
-
-  const date = new Date(String(value));
-  console.log(date);
-  return date;
-  // return Number.isNaN(date.getTime()) ? value : date;
-}
-
 export const nediProgramsImportConfig: ImportConfig<any> = {
   table: nediPrograms,
 
   conflictStrategy: "error",
 
+  // Same labels and order as the table in the UI, then the columns the table
+  // does not show.
   columns: {
     programName: {
       type: "required",
+      header: "Program Name",
       transform: (value) => String(value ?? "").trim(),
     },
     targetGroup: {
       type: "required",
+      header: "Target Group",
       transform: (value) => String(value ?? "").trim(),
     },
     beneficiaries: {
       type: "required",
+      header: "Beneficiaries",
       transform: normalizeInt,
     },
     serviceType: {
       type: "required",
-      transform: (value) => String(value ?? "").trim(),
-    },
-    description: {
-      type: "required",
+      header: "Service Type",
       transform: (value) => String(value ?? "").trim(),
     },
     status: {
       type: "required",
+      header: "Status",
       transform: normalizeStatus,
     },
     location: {
       type: "required",
+      header: "Location",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    implementingPartner: {
+      type: "required",
+      header: "Partner",
+      transform: (value) => String(value ?? "").trim(),
+    },
+    startDate: {
+      type: "required",
+      header: "Start Date",
+      transform: toIsoDate,
+    },
+    endDate: {
+      type: "optional",
+      header: "End Date",
+      transform: toIsoDate,
+    },
+    description: {
+      type: "required",
+      header: "Description",
       transform: (value) => String(value ?? "").trim(),
     },
     maleParticipants: {
       type: "optional",
+      header: "Male Participants",
       transform: normalizeOptionalInt,
     },
     femaleParticipants: {
       type: "optional",
+      header: "Female Participants",
       transform: normalizeOptionalInt,
-    },
-    startDate: {
-      type: "required",
-      transform: (value) => {
-        console.log(value);
-        return value;
-      },
-    },
-    endDate: {
-      type: "optional",
-      transform: normalizeDate,
-    },
-    implementingPartner: {
-      type: "required",
-      transform: (value) => String(value ?? "").trim(),
     },
     fundingSource: {
       type: "required",
+      header: "Funding Source",
       transform: (value) => String(value ?? "").trim(),
     },
   },
@@ -294,8 +303,8 @@ export const nediProgramsImportConfig: ImportConfig<any> = {
     location: z.string().min(1),
     maleParticipants: z.number().int().nonnegative().nullable().optional(),
     femaleParticipants: z.number().int().nonnegative().nullable().optional(),
-    startDate: z.any(),
-    endDate: z.any().nullable().optional(),
+    startDate: z.string(),
+    endDate: z.string().nullable().optional(),
     implementingPartner: z.string().min(1),
     fundingSource: z.string().min(1),
   }),
@@ -304,41 +313,51 @@ export const nediProgramsImportConfig: ImportConfig<any> = {
 export const nyssProgramsImportConfig: ImportConfig<any> = {
   table: nyssPrograms,
   conflictStrategy: "error",
+  // Same labels and order as the table in the UI.
   columns: {
     programName: {
       type: "required",
+      header: "Program Name",
       transform: (value) => String(value ?? "").trim(),
     },
     institution: {
       type: "required",
+      header: "Institution",
       transform: (value) => String(value ?? "").trim(),
     },
     year: {
       type: "required",
+      header: "Year",
       transform: normalizeInt,
     },
     region: {
       type: "required",
+      header: "Region",
       transform: (value) => String(value ?? "").trim(),
     },
     sector: {
       type: "required",
+      header: "Sector",
       transform: (value) => String(value ?? "").trim(),
     },
     totalGraduates: {
       type: "optional",
+      header: "Total",
       transform: normalizeInt,
     },
     maleGraduates: {
       type: "optional",
+      header: "Male",
       transform: normalizeInt,
     },
     femaleGraduates: {
       type: "optional",
+      header: "Female",
       transform: normalizeInt,
     },
     employmentRate: {
       type: "optional",
+      header: "Employment %",
       transform: (value) => String(Number(value ?? 0)),
     },
   },
@@ -358,37 +377,46 @@ export const nyssProgramsImportConfig: ImportConfig<any> = {
 export const nyssGraduatesImportConfig: ImportConfig<any> = {
   table: nyssGraduates,
   conflictStrategy: "error",
+  // Same labels and order as the table in the UI.
   columns: {
     name: {
       type: "required",
+      header: "Name",
       transform: (value) => String(value ?? "").trim(),
     },
     age: {
       type: "required",
+      header: "Age",
       transform: normalizeInt,
     },
     gender: {
       type: "required",
+      header: "Gender",
       transform: (value) => String(value ?? "").trim(),
     },
     region: {
       type: "required",
+      header: "Region",
       transform: (value) => String(value ?? "").trim(),
     },
     trainingProgram: {
       type: "required",
+      header: "Training Program",
       transform: (value) => String(value ?? "").trim(),
     },
     graduationYear: {
       type: "required",
+      header: "Graduation Year",
       transform: (value) => String(value ?? "").trim(),
     },
     employmentStatus: {
       type: "required",
+      header: "Employment Status",
       transform: (value) => String(value ?? "").trim(),
     },
     sector: {
       type: "required",
+      header: "Sector",
       transform: (value) => String(value ?? "").trim(),
     },
   },

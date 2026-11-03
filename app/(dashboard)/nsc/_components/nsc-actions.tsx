@@ -1,6 +1,7 @@
 "use client";
 
 import { DataImportDialog } from "@/components/data-import-dialog";
+import { NscParticipantsImportInstructions } from "@/feature/import-csv/instructions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { importNscParticipantsData } from "@/feature/import-csv/action";
@@ -12,7 +13,7 @@ export function NscActions() {
 
   return (
     <div className="flex gap-2">
-      <DataImportDialog tableName="nsc_participants" serverActionHander={importNscParticipantsData} />
+      <DataImportDialog tableName="nsc_participants" serverActionHander={importNscParticipantsData} instructions={<NscParticipantsImportInstructions />} />
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogTrigger asChild>
           <Button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { DataImportDialog } from "@/components/data-import-dialog";
+import { NediProgramsImportInstructions } from "@/feature/import-csv/instructions";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { importNediProgramsData } from "@/feature/import-csv/action";
@@ -27,6 +28,7 @@ export function NediProgramsActions() {
       <DataImportDialog
         tableName="nedi_programs"
         serverActionHander={importNediProgramsData}
+        instructions={<NediProgramsImportInstructions />}
       />
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogTrigger asChild>

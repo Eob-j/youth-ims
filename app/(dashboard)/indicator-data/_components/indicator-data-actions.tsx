@@ -1,6 +1,7 @@
 "use client";
 
 import { DataImportDialog } from "@/components/data-import-dialog";
+import { IndicatorDataImportInstructions } from "@/feature/import-csv/instructions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { importIndicatorData } from "@/feature/import-csv/action";
@@ -12,7 +13,7 @@ export function IndicatorDataActions() {
 
   return (
     <div className="flex gap-2">
-      <DataImportDialog tableName="indicator_data" serverActionHander={importIndicatorData} />
+      <DataImportDialog tableName="indicator_data" serverActionHander={importIndicatorData} instructions={<IndicatorDataImportInstructions />} />
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogTrigger asChild>
           <Button>
