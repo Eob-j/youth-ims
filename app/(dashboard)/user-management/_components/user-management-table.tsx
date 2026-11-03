@@ -49,7 +49,7 @@ export function UserManagementTable({
   };
 
   const handleRetrySendInvite = async (item: userType) => {
-    const res = await retrySendInviteEmail(item.id, item.email, item.name);
+    const res = await retrySendInviteEmail(item.id);
     if (res.success) {
       toast.success("Invite sent successfully.", {
         richColors: true,

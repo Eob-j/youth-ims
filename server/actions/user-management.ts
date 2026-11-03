@@ -279,12 +279,30 @@ async function sendInviteEmail({
   });
 }
 
-export async function retrySendInviteEmail(
-  userId: string,
-  email: string,
-  name: string,
-) {
+export async function retrySendInviteEmail(userId: string) {
+  const session = await getServerSideSession();
+
+  if (!session) {
+    return fail("Unauthorized");
+  }
+
+  if (session.user.role !== "admin") {
+    return fail("Unauthorized");
+  }
+
   try {
+    // Look up the recipient rather than trusting the caller, so the link can
+    // only ever go to the user's own address.
+    const [user] = await db
+      .select({ email: users.email, name: users.name })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+
+    if (!user) {
+      return fail("User not found.");
+    }
+
     // check if the user has an associated token
     let [record] = await db
       .select()
@@ -300,9 +318,9 @@ export async function retrySendInviteEmail(
       record = await generateAndStoreToken({ userId });
     }
     await sendInviteEmail({
-      email,
+      email: user.email,
       token: record.value,
-      name,
+      name: user.name,
     });
     return ok("Invitation sent successfully.");
   } catch (error) {
