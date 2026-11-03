@@ -60,6 +60,11 @@ type UpdateYouthWithoutDisabilitiesInput = {
 export async function updateYouthWithoutDisabilities(
   data: UpdateYouthWithoutDisabilitiesInput,
 ) {
+  const session = await getServerSideSession();
+  if (!session) {
+    return fail("Unauthorized");
+  }
+
   try {
     const result = await db
       .update(youthWithoutDisabilities)
@@ -95,6 +100,11 @@ export async function deleteYouthWithoutDisabilities(data: {
   id: number;
   version: number;
 }) {
+  const session = await getServerSideSession();
+  if (!session) {
+    return fail("Unauthorized");
+  }
+
   const { id, version } = data;
 
   const whereClause = version

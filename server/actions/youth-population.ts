@@ -59,6 +59,11 @@ type UpdateYouthPopulationInput = {
 };
 
 export async function updateYouthPopulation(data: UpdateYouthPopulationInput) {
+  const session = await getServerSideSession();
+  if (!session) {
+    return fail("Unauthorized");
+  }
+
   //   const parsed = updateYouthPopulationSchema.safeParse(rawData);
 
   //   if (!parsed.success) {
@@ -109,6 +114,11 @@ export async function deleteYouthPopulation(data: {
   id: number;
   version: number;
 }) {
+  const session = await getServerSideSession();
+  if (!session) {
+    return fail("Unauthorized");
+  }
+
   //   const parsed = deleteYouthPopulationSchema.safeParse(rawData);
 
   //   if (!parsed.success) {
