@@ -6,7 +6,7 @@ import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
 import { parseSpreadsheet, toIsoDate } from "@/lib/importer/parse-file";
 import { nscParticipantImportSchema } from "@/lib/validations/nsc-participants";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import z from "zod";
 import {
@@ -87,6 +87,7 @@ export async function updateNscParticipant(input: UpdateNscParticipantInput) {
         achievements: data.achievements ?? null,
         dateRegistered: data.dateRegistered,
         contact: data.contact ?? null,
+        version: sql`${nscParticipants.version} + 1`, // Increment version
       })
       .where(
         and(

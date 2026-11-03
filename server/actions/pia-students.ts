@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { piaStudents } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
-import { and, DrizzleQueryError, eq } from "drizzle-orm";
+import { and, DrizzleQueryError, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import {
   invalidInput,
@@ -82,6 +82,7 @@ export async function updatePiaStudents(input: UpdatePiaStudentsInput) {
         female: data.female,
         enrolled: data.enrolled,
         graduated: data.graduated,
+        version: sql`${piaStudents.version} + 1`, // Increment version
       })
       .where(
         and(eq(piaStudents.id, data.id), eq(piaStudents.version, data.version)),
@@ -89,7 +90,7 @@ export async function updatePiaStudents(input: UpdatePiaStudentsInput) {
       .returning();
 
     if (result.length === 0) {
-      return fail("Record not found.");
+      return fail("Record modified by another user.");
     }
     revalidatePath("/pia-students");
     return ok(result[0]);

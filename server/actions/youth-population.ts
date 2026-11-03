@@ -147,9 +147,10 @@ export async function deleteYouthPopulation(input: RecordRef) {
 
   const { id, version } = data;
 
-  const whereClause = version
-    ? and(eq(youthPopulation.id, id), eq(youthPopulation.version, version))
-    : eq(youthPopulation.id, id);
+  const whereClause = and(
+    eq(youthPopulation.id, id),
+    eq(youthPopulation.version, version),
+  );
 
   try {
     const result = await db

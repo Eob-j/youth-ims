@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { nyssGraduates } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import {
   invalidInput,
@@ -77,6 +77,7 @@ export async function updateNyssGraduate(input: UpdateNyssGraduateInput) {
         graduationYear: data.graduationYear,
         employmentStatus: data.employmentStatus,
         sector: data.sector,
+        version: sql`${nyssGraduates.version} + 1`, // Increment version
       })
       .where(
         and(
@@ -87,7 +88,7 @@ export async function updateNyssGraduate(input: UpdateNyssGraduateInput) {
       .returning();
 
     if (result.length === 0) {
-      return fail("Record not found.");
+      return fail("Record modified by another user.");
     }
 
     revalidatePath("/nyss");

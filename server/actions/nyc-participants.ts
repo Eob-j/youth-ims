@@ -6,7 +6,7 @@ import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
 import { parseSpreadsheet, toIsoDate } from "@/lib/importer/parse-file";
 import { nycParticipantImportSchema } from "@/lib/validations/nyc-participants";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import z from "zod";
 import {
@@ -87,6 +87,7 @@ export async function updateNycParticipant(input: UpdateNycParticipantInput) {
         achievements: data.achievements ?? null,
         dateRegistered: data.dateRegistered,
         contact: data.contact ?? null,
+        version: sql`${nycParticipants.version} + 1`, // Increment version
       })
       .where(
         and(

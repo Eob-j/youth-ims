@@ -5,7 +5,7 @@ import { nediPrograms } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
 import { StatusEnumType } from "@/lib/validations/nedi-programs";
-import { and, DrizzleQueryError, eq } from "drizzle-orm";
+import { and, DrizzleQueryError, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import {
   invalidInput,
@@ -99,6 +99,7 @@ export async function updateNediProgram(input: UpdateNediProgramInput) {
         endDate: data.endDate,
         implementingPartner: data.implementingPartner,
         fundingSource: data.fundingSource,
+        version: sql`${nediPrograms.version} + 1`, // Increment version
       })
       .where(
         and(
@@ -109,7 +110,7 @@ export async function updateNediProgram(input: UpdateNediProgramInput) {
       .returning();
 
     if (result.length === 0) {
-      return fail("Record not found.");
+      return fail("Record modified by another user.");
     }
     revalidatePath("/nedi-programs");
     return ok(result[0]);

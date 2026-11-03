@@ -6,7 +6,7 @@ import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
 import { parseSpreadsheet } from "@/lib/importer/parse-file";
 import { indicatorDataImportRowSchema } from "@/lib/validations/indicator-data";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import z from "zod";
 import {
@@ -89,6 +89,7 @@ export async function updateIndicatorData(input: UpdateIndicatorDataInput) {
         total: data.male + data.female,
         referenceSource: data.referenceSource,
         category: data.category,
+        version: sql`${indicatorData.version} + 1`, // Increment version
       })
       .where(
         and(

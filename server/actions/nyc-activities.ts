@@ -6,7 +6,7 @@ import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
 import { parseSpreadsheet } from "@/lib/importer/parse-file";
 import { nycActivityImportSchema } from "@/lib/validations/nyc-activities";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import z from "zod";
 import {
@@ -85,6 +85,7 @@ export async function updateNycActivity(input: UpdateNycActivityInput) {
         fundingPartner: data.fundingPartner,
         description: data.description,
         status: data.status,
+        version: sql`${nycActivities.version} + 1`, // Increment version
       })
       .where(
         and(
