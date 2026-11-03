@@ -43,6 +43,9 @@ export const auth = betterAuth({
     minPasswordLength: 8,
     maxPasswordLength: 20,
     requireEmailVerification: true,
+    // Accounts are created only by admins (User Management), never by
+    // public sign-up. This does not affect the admin plugin's createUser.
+    disableSignUp: true,
     resetPasswordTokenExpiresIn: 60 * 60, // 1 hour
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
