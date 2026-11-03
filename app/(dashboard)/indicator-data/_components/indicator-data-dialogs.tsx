@@ -12,6 +12,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import type {
+  IndicatorCategory,
+  IndicatorOrganization,
+} from "@/lib/schema/indicator-data";
 import { indicatorDataSchema } from "@/lib/validations/indicator-data";
 import { useIndicatorDataStore } from "@/store/indicator-data-store";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -116,14 +120,16 @@ function IndicatorDataEditDialog() {
     defaultValues: {
       id: selectedItem?.id ?? 0,
       version: selectedItem?.version ?? 1,
-      organization: selectedItem?.organization,
+      organization: selectedItem?.organization as
+        | IndicatorOrganization
+        | undefined,
       indicator: selectedItem?.indicator ?? "",
       year: String(selectedItem?.year ?? ""),
       region: (selectedItem?.region as any) ?? undefined,
       male: String(selectedItem?.male ?? 0),
       female: String(selectedItem?.female ?? 0),
       referenceSource: selectedItem?.referenceSource ?? "",
-      category: selectedItem?.category,
+      category: selectedItem?.category as IndicatorCategory | undefined,
     },
   });
 
