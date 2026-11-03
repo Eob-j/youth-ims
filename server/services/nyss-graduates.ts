@@ -1,4 +1,4 @@
-"use server";
+import "server-only";
 
 import { db } from "@/db";
 import { nyssGraduates } from "@/db/schema";

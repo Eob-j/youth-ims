@@ -1,4 +1,4 @@
-"use server";
+import "server-only";
 
 import { db } from "@/db";
 import { nycParticipants, type NycParticipantsType } from "@/db/schema";

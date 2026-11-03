@@ -1,4 +1,4 @@
-"use server";
+import "server-only";
 
 import { db } from "@/db";
 import { nscParticipants, type NscParticipantsType } from "@/db/schema";

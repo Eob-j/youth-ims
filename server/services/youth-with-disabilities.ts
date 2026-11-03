@@ -1,3 +1,5 @@
+import "server-only";
+
 import { db } from "@/db";
 import { youthWithDisabilities } from "@/db/schema";
 import { getServerSideSession } from "@/lib/auth-helper";

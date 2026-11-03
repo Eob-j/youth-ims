@@ -1,4 +1,4 @@
-"use server";
+import "server-only";
 
 import { db } from "@/db";
 import { indicatorData, type IndicatorDataType } from "@/db/schema";
