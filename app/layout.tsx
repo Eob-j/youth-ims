@@ -19,7 +19,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      {/* Browser extensions (Grammarly, password managers, etc.) add
+          attributes to <body> before React hydrates, which React reports as
+          a mismatch. This only silences attribute differences on <body>
+          itself, not mismatches inside the page. */}
+      <body className={inter.className} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
