@@ -5,6 +5,7 @@ import {
   hasAdminCredentials,
   missingAdminCredentialsMessage,
   newLoggedInContext,
+  queryDb,
 } from "./helpers";
 
 test.describe("send invite", () => {
@@ -103,5 +104,81 @@ test.describe("add user", () => {
     await expect(page.getByText(/Invalid role/)).toBeVisible();
     // The form keeps what was typed after a failed save.
     await expect(dialog.locator("#name")).toHaveValue("E2E Role Check");
+  });
+});
+
+// An admin cannot delete or demote themselves, so at least one admin always
+// remains. Every test acts on the admin test account's own row only.
+test.describe("admin cannot lock themselves out", () => {
+  test.skip(!hasAdminCredentials, missingAdminCredentialsMessage);
+
+  let context: BrowserContext;
+
+  test.beforeEach(async ({ browser }) => {
+    context = await newLoggedInContext(browser, adminCredentials);
+  });
+
+  test.afterEach(async () => {
+    await context?.close();
+  });
+
+  async function ownRow() {
+    const page = await context.newPage();
+    await page.goto("/user-management");
+    const row = page
+      .getByRole("row")
+      .filter({ hasText: adminCredentials.email });
+    await expect(row).toHaveCount(1);
+    return { page, row };
+  }
+
+  const ownRole = async () =>
+    (
+      await queryDb("select role from users where email = $1", [
+        adminCredentials.email,
+      ])
+    )[0]?.role;
+
+  test("cannot remove their own admin role", async () => {
+    const { page, row } = await ownRow();
+    await row.getByRole("button").click();
+    await page.getByRole("menuitem", { name: "Edit" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("combobox").click();
+    await page.getByRole("option", { name: /Viewer/ }).click();
+    await dialog.getByRole("button", { name: "Update User" }).click();
+
+    await expect(
+      page.getByText(/You cannot remove your own admin role/),
+    ).toBeVisible();
+    expect(await ownRole()).toBe("admin");
+  });
+
+  test("cannot delete their own account", async () => {
+    const { page, row } = await ownRow();
+    await row.getByRole("button").click();
+    await page.getByRole("menuitem", { name: "Delete" }).click();
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Delete" })
+      .click();
+
+    await expect(
+      page.getByText("You cannot delete your own account."),
+    ).toBeVisible();
+    expect(await ownRole()).toBe("admin");
+  });
+
+  test("cannot bulk delete their own account", async () => {
+    const { page, row } = await ownRow();
+    await row.getByRole("checkbox").check();
+    await page.getByRole("button", { name: /Delete 1 item/ }).click();
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Delete" })
+      .click();
+
+    await expect(page.getByText(/Your own account is selected/)).toBeVisible();
+    expect(await ownRole()).toBe("admin");
   });
 });
