@@ -1,4 +1,7 @@
 "use client";
+// TanStack Table keeps its state in a mutable object, which the React
+// Compiler's memoization would turn into stale UI. Opt this component out.
+"use no memo";
 
 import * as React from "react";
 import {

@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Memoizes components automatically (needs babel-plugin-react-compiler).
+  reactCompiler: true,
   images: {
     unoptimized: true,
   },
