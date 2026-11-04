@@ -74,7 +74,12 @@ type UpdateUserInput = {
   role: string;
 };
 
-export async function updateUser(data: UpdateUserInput) {
+const updateUserSchema = userSchema.extend({ id: z.string().min(1) });
+const userRefSchema = z.object({ id: z.string().min(1) });
+
+// Admins cannot delete or demote themselves. Every admin action is taken by
+// an admin, so this guarantees at least one admin always remains.
+export async function updateUser(input: UpdateUserInput) {
   const session = await getServerSideSession();
 
   if (!session) {
@@ -83,6 +88,18 @@ export async function updateUser(data: UpdateUserInput) {
 
   if (session.user.role !== "admin") {
     return fail("Unauthorized");
+  }
+
+  const parsed = updateUserSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
+
+  if (data.id === session.user.id && data.role !== "admin") {
+    return fail(
+      "You cannot remove your own admin role. Ask another admin to change it.",
+    );
   }
 
   try {
@@ -110,7 +127,7 @@ type DeleteUserInput = {
   id: string;
 };
 
-export async function deleteUser(data: DeleteUserInput) {
+export async function deleteUser(input: DeleteUserInput) {
   const session = await getServerSideSession();
 
   if (!session) {
@@ -119,6 +136,16 @@ export async function deleteUser(data: DeleteUserInput) {
 
   if (session.user.role !== "admin") {
     return fail("Unauthorized");
+  }
+
+  const parsed = userRefSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
+
+  if (data.id === session.user.id) {
+    return fail("You cannot delete your own account.");
   }
 
   try {
@@ -139,7 +166,7 @@ export async function deleteUser(data: DeleteUserInput) {
 type BulkDeleteUsersInput = {
   id: string;
 }[];
-export async function bulkDeleteUsers(data: BulkDeleteUsersInput) {
+export async function bulkDeleteUsers(input: BulkDeleteUsersInput) {
   const session = await getServerSideSession();
 
   if (!session) {
@@ -156,10 +183,26 @@ export async function bulkDeleteUsers(data: BulkDeleteUsersInput) {
     };
   }
 
+  const parsed = z.array(userRefSchema).max(1000).safeParse(input);
+  if (!parsed.success) {
+    return { success: false, message: invalidInput(parsed.error) };
+  }
+  const data = parsed.data;
+
   if (data.length === 0) {
     return {
       success: false,
       message: "No records provided for deletion.",
+    };
+  }
+
+  // Checked before deleting anything, so a selection that includes the
+  // current admin is not partly deleted.
+  if (data.some((obj) => obj.id === session.user.id)) {
+    return {
+      success: false,
+      message:
+        "Your own account is selected. Unselect it to delete the others.",
     };
   }
 
