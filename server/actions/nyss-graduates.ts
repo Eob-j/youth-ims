@@ -15,6 +15,7 @@ import {
   wholeNumber,
 } from "@/lib/validations/action-input";
 import z from "zod";
+import { matchRecords } from "@/lib/db/match-records";
 
 const createNyssGraduateSchema = z.object({
   name: requiredText,
@@ -153,26 +154,13 @@ export async function bulkDeleteNyssGraduates(input: BulkDeleteNyssGraduatesInpu
       return fail("No records provided for deletion.");
     }
 
-    const result = await db.transaction(async (tx) => {
-      let deletedCount = 0;
-
-      for (const record of records) {
-        const deleted = await tx
-          .delete(nyssGraduates)
-          .where(
-            and(
-              eq(nyssGraduates.id, record.id),
-              eq(nyssGraduates.version, record.version),
-            ),
-          )
-          .returning({ id: nyssGraduates.id });
-        if (deleted.length > 0) {
-          deletedCount++;
-        }
-      }
-
-      return deletedCount;
-    });
+    // One query for all selected records, matched on id and version.
+    const result = (
+      await db
+        .delete(nyssGraduates)
+        .where(matchRecords(nyssGraduates, records))
+        .returning({ id: nyssGraduates.id })
+    ).length;
 
     revalidatePath("/nyss");
     return ok({

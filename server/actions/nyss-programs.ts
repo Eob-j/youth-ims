@@ -17,6 +17,7 @@ import {
   decimalText,
 } from "@/lib/validations/action-input";
 import z from "zod";
+import { matchRecords } from "@/lib/db/match-records";
 
 const createNyssProgramSchema = z.object({
   programName: requiredText,
@@ -157,27 +158,13 @@ export async function bulkDeleteNyssPrograms(input: BulkDeleteNyssProgramsInput)
       return fail("No records provided for deletion.");
     }
 
-    const result = await db.transaction(async (tx) => {
-      let deletedCount = 0;
-
-      for (const record of records) {
-        const deleted = await tx
-          .delete(nyssPrograms)
-          .where(
-            and(
-              eq(nyssPrograms.id, record.id),
-              eq(nyssPrograms.version, record.version),
-            ),
-          )
-          .returning({ id: nyssPrograms.id });
-
-        if (deleted.length > 0) {
-          deletedCount++;
-        }
-      }
-
-      return deletedCount;
-    });
+    // One query for all selected records, matched on id and version.
+    const result = (
+      await db
+        .delete(nyssPrograms)
+        .where(matchRecords(nyssPrograms, records))
+        .returning({ id: nyssPrograms.id })
+    ).length;
 
     revalidatePath("/nyss");
     return ok({

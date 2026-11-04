@@ -19,6 +19,7 @@ import {
   yearNumber,
 } from "@/lib/validations/action-input";
 import { INDICATOR_CATEGORIES, INDICATOR_ORGANIZATIONS } from "@/lib/schema/indicator-data";
+import { matchRecords } from "@/lib/db/match-records";
 
 const indicatorPayloadSchema = z.object({
   organization: z.enum(INDICATOR_ORGANIZATIONS),
@@ -163,25 +164,13 @@ export async function bulkDeleteIndicatorData(input: RecordRef[]) {
   }
 
   try {
-    const deleted = await db.transaction(async (tx) => {
-      let deletedCount = 0;
-      for (const record of records) {
-        const result = await tx
-          .delete(indicatorData)
-          .where(
-            and(
-              eq(indicatorData.id, record.id),
-              eq(indicatorData.version, record.version),
-            ),
-          )
-          .returning({ id: indicatorData.id });
-
-        if (result.length > 0) {
-          deletedCount++;
-        }
-      }
-      return deletedCount;
-    });
+    // One query for all selected records, matched on id and version.
+    const deleted = (
+      await db
+        .delete(indicatorData)
+        .where(matchRecords(indicatorData, records))
+        .returning({ id: indicatorData.id })
+    ).length;
 
     revalidatePath("/indicator-data");
     return ok({

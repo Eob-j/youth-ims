@@ -19,6 +19,7 @@ import {
   yearNumber,
 } from "@/lib/validations/action-input";
 import { NYC_ACTIVITY_STATUSES } from "@/lib/schema/nyc-activities";
+import { matchRecords } from "@/lib/db/match-records";
 
 const createNycActivitySchema = z.object({
   activityName: requiredText,
@@ -159,22 +160,13 @@ export async function bulkDeleteNycActivities(input: RecordRef[]) {
   }
 
   try {
-    const deleted = await db.transaction(async (tx) => {
-      let deletedCount = 0;
-      for (const record of records) {
-        const result = await tx
-          .delete(nycActivities)
-          .where(
-            and(
-              eq(nycActivities.id, record.id),
-              eq(nycActivities.version, record.version),
-            ),
-          )
-          .returning({ id: nycActivities.id });
-        if (result.length > 0) deletedCount++;
-      }
-      return deletedCount;
-    });
+    // One query for all selected records, matched on id and version.
+    const deleted = (
+      await db
+        .delete(nycActivities)
+        .where(matchRecords(nycActivities, records))
+        .returning({ id: nycActivities.id })
+    ).length;
 
     revalidatePath("/nyc-activities");
     return ok({ requested: records.length, deleted });

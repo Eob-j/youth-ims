@@ -19,6 +19,7 @@ import {
   isoDate,
 } from "@/lib/validations/action-input";
 import { NSC_GENDERS, NSC_STATUSES } from "@/lib/schema/nsc-participants";
+import { matchRecords } from "@/lib/db/match-records";
 
 const createNscParticipantSchema = z.object({
   name: requiredText,
@@ -161,22 +162,13 @@ export async function bulkDeleteNscParticipants(input: RecordRef[]) {
   }
 
   try {
-    const deleted = await db.transaction(async (tx) => {
-      let deletedCount = 0;
-      for (const record of records) {
-        const result = await tx
-          .delete(nscParticipants)
-          .where(
-            and(
-              eq(nscParticipants.id, record.id),
-              eq(nscParticipants.version, record.version),
-            ),
-          )
-          .returning({ id: nscParticipants.id });
-        if (result.length > 0) deletedCount++;
-      }
-      return deletedCount;
-    });
+    // One query for all selected records, matched on id and version.
+    const deleted = (
+      await db
+        .delete(nscParticipants)
+        .where(matchRecords(nscParticipants, records))
+        .returning({ id: nscParticipants.id })
+    ).length;
 
     revalidatePath("/nsc");
     return ok({

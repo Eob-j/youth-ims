@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { piaStudents } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
-import { and, DrizzleQueryError, eq, sql } from "drizzle-orm";
+import { and, DrizzleQueryError, eq, sql, TransactionRollbackError } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import {
   invalidInput,
@@ -15,6 +15,7 @@ import {
   wholeNumber,
 } from "@/lib/validations/action-input";
 import z from "zod";
+import { matchRecords } from "@/lib/db/match-records";
 
 const createPiaStudentsSchema = z.object({
   department: requiredText,
@@ -162,27 +163,22 @@ export async function bulkDeletePiaStudents(input: BulkDeletePiaStudentsInput) {
       };
     }
 
-    const result = await db.transaction(async (tx) => {
-      let deletedCount = 0;
-
-      for (const record of records) {
+    // One query for all selected records, matched on id and version. All or
+    // nothing: if any record was changed or removed meanwhile, roll back so
+    // the "refresh and try again" message is true.
+    const result = await db
+      .transaction(async (tx) => {
         const deleted = await tx
           .delete(piaStudents)
-          .where(
-            and(
-              eq(piaStudents.id, record.id),
-              eq(piaStudents.version, record.version),
-            ),
-          )
+          .where(matchRecords(piaStudents, records))
           .returning({ id: piaStudents.id });
-
-        if (deleted.length > 0) {
-          deletedCount++;
-        }
-      }
-
-      return deletedCount;
-    });
+        if (deleted.length !== records.length) tx.rollback();
+        return deleted.length;
+      })
+      .catch((error) => {
+        if (error instanceof TransactionRollbackError) return 0;
+        throw error;
+      });
 
     if (result !== records.length) {
       return {

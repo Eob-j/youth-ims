@@ -158,6 +158,69 @@ test.describe("update and delete actions", () => {
     }
   }
 
+  // Bulk delete is one query, all or nothing for these tables.
+  async function createTwo(browser: Browser) {
+    const prefix = `E2E-bulk-${Date.now()}`;
+    const view = await openSearch(browser, "/youth-population", prefix);
+    for (const suffix of ["a", "b"]) {
+      await createRecord(view.page, `${prefix}-${suffix}`);
+    }
+    await searchFor(view.page, prefix);
+    await expect(view.rows).toHaveCount(2);
+    return { prefix, ...view };
+  }
+
+  const countRows = async (prefix: string) =>
+    (
+      await queryDb(
+        "select count(*)::int as n from youth_population where lga like $1",
+        [`${prefix}%`],
+      )
+    )[0].n;
+
+  async function bulkDelete(page: Page) {
+    await page.getByRole("button", { name: "Delete 2 items" }).click();
+    await page
+      .getByRole("alertdialog")
+      .getByRole("button", { name: "Delete" })
+      .click();
+  }
+
+  test("bulk delete removes all selected records", async ({ browser }) => {
+    const { prefix, context, page, rows } = await createTwo(browser);
+    for (const row of await rows.all()) await row.getByRole("checkbox").check();
+    await bulkDelete(page);
+
+    await expect(rows).toHaveCount(0);
+    expect(await countRows(prefix)).toBe(0);
+    await context.close();
+  });
+
+  test("bulk delete deletes nothing if a selected record changed", async ({
+    browser,
+  }) => {
+    const { prefix, context, page, rows } = await createTwo(browser);
+    for (const row of await rows.all()) await row.getByRole("checkbox").check();
+
+    // Someone else saves one of the records, which moves its version on.
+    const other = await openSearch(browser, "/youth-population", `${prefix}-a`);
+    await other.rows.getByRole("button").click();
+    await other.page.getByRole("menuitem", { name: "Edit" }).click();
+    await other.page
+      .getByRole("dialog")
+      .locator('button[type="submit"]')
+      .click();
+    await expect(other.page.getByRole("dialog")).toBeHidden();
+    await other.context.close();
+
+    await bulkDelete(page);
+    await expect(
+      page.getByText(/Some records were modified/).first(),
+    ).toBeVisible();
+    expect(await countRows(prefix)).toBe(2);
+    await context.close();
+  });
+
   test("a search with no matches says No entries", async ({ browser }) => {
     const { context, page } = await openSearch(
       browser,

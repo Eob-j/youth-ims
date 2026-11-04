@@ -19,6 +19,7 @@ import {
   isoDate,
 } from "@/lib/validations/action-input";
 import { NYC_GENDERS, NYC_STATUSES } from "@/lib/schema/nyc-participants";
+import { matchRecords } from "@/lib/db/match-records";
 
 const createNycParticipantSchema = z.object({
   name: requiredText,
@@ -161,22 +162,13 @@ export async function bulkDeleteNycParticipants(input: RecordRef[]) {
   }
 
   try {
-    const deleted = await db.transaction(async (tx) => {
-      let deletedCount = 0;
-      for (const record of records) {
-        const result = await tx
-          .delete(nycParticipants)
-          .where(
-            and(
-              eq(nycParticipants.id, record.id),
-              eq(nycParticipants.version, record.version),
-            ),
-          )
-          .returning({ id: nycParticipants.id });
-        if (result.length > 0) deletedCount++;
-      }
-      return deletedCount;
-    });
+    // One query for all selected records, matched on id and version.
+    const deleted = (
+      await db
+        .delete(nycParticipants)
+        .where(matchRecords(nycParticipants, records))
+        .returning({ id: nycParticipants.id })
+    ).length;
 
     revalidatePath("/nyc");
     return ok({
