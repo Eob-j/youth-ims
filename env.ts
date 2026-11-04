@@ -12,15 +12,12 @@ export const env = createEnv({
     GMAIL_USER: z.string().min(1),
     GMAIL_PASS: z.string().min(1),
   },
-  client: {
-    NEXT_PUBLIC_BETTER_AUTH_URL: z.string().min(1),
-  },
+  client: {},
   // If you're using Next.js < 13.4.4, you'll need to specify the runtimeEnv manually
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
     BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
     BETTER_AUTH_URL: process.env.BETTER_AUTH_URL,
-    NEXT_PUBLIC_BETTER_AUTH_URL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     EMAIL_SENDER_NAME: process.env.EMAIL_SENDER_NAME,
     EMAIL_SENDER_ADDRESS: process.env.EMAIL_SENDER_ADDRESS,

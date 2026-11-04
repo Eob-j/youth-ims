@@ -15,8 +15,7 @@ Complete this checklist before deploying the Youth IMS to production.
 
 - [ ] `DATABASE_URL` is set
 - [ ] `BETTER_AUTH_SECRET` is set
-- [ ] `BETTER_AUTH_URL` is set
-- [ ] `NEXT_PUBLIC_BETTER_AUTH_URL` is set
+- [ ] `BETTER_AUTH_URL` is set to the production URL (e.g. `https://doysmoys.gov.gm`)
 - [ ] `RESEND_API_KEY` is set
 - [ ] `EMAIL_SENDER_NAME` is set
 - [ ] `EMAIL_SENDER_ADDRESS` is set
