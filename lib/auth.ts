@@ -66,14 +66,7 @@ export const auth = betterAuth({
   // Password resets may only be started by an admin through the
   // sendPasswordResetEmail server action, never by a public request.
   disabledPaths: ["/request-password-reset"],
-  users: {
-    additionalFields: {
-      role: {
-        type: "string",
-        required: true,
-      },
-    },
-  },
+  // The user's role field comes from the admin plugin.
   plugins: [
     adminPlugin({
       ac,
