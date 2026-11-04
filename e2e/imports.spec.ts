@@ -30,6 +30,73 @@ const emptyCsv = {
   buffer: Buffer.from("e2e_column\n"),
 };
 
+// File size and row limits (lib/importer/limits.ts). None of these files has
+// valid rows, so nothing is ever inserted.
+test.describe("import limits", () => {
+  test.skip(!hasCredentials, missingCredentialsMessage);
+
+  let context: BrowserContext;
+
+  test.beforeEach(async ({ browser }) => {
+    context = await newLoggedInContext(browser);
+  });
+
+  test.afterEach(async () => {
+    await context?.close();
+  });
+
+  async function openImport() {
+    const page = await context.newPage();
+    await page.goto("/youth-population");
+    await page.getByRole("button", { name: "Import Data" }).click();
+    return page;
+  }
+
+  const csv = (name: string, text: string) => ({
+    name,
+    mimeType: "text/csv",
+    buffer: Buffer.from(text),
+  });
+
+  test("the dialog refuses a file over 5 MB", async () => {
+    const page = await openImport();
+    const big = csv("e2e-big.csv", "e2e_column\n" + "x".repeat(6 * 1024 * 1024));
+    await page.locator('input[type="file"]').setInputFiles(big);
+
+    await expect(page.getByText("File too large")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Choose an CSV file" }),
+    ).toBeVisible();
+  });
+
+  test("a 3 MB file reaches the import (above the old 1 MB limit)", async () => {
+    const page = await openImport();
+    // One long cell under a header the import does not know: no valid rows.
+    const medium = csv(
+      "e2e-medium.csv",
+      "e2e_column\n" + "x".repeat(3 * 1024 * 1024) + "\n",
+    );
+    await page.locator('input[type="file"]').setInputFiles(medium);
+    await page.getByRole("button", { name: "Import", exact: true }).click();
+
+    await expect(page.getByText("No valid rows found")).toBeVisible({
+      timeout: 60_000,
+    });
+  });
+
+  test("the server refuses more than 10,000 rows", async () => {
+    const page = await openImport();
+    const many = csv(
+      "e2e-many-rows.csv",
+      "e2e_column\n" + "x\n".repeat(10_001),
+    );
+    await page.locator('input[type="file"]').setInputFiles(many);
+    await page.getByRole("button", { name: "Import", exact: true }).click();
+
+    await expect(page.getByText(/The maximum is 10,000 per import/)).toBeVisible();
+  });
+});
+
 test.describe("import actions", () => {
   test.skip(!hasCredentials, missingCredentialsMessage);
 
