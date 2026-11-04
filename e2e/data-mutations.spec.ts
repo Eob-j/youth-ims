@@ -208,6 +208,30 @@ test.describe("update and delete actions", () => {
     expect(await youthPopulationRows(marker)).toHaveLength(0);
   });
 
+  test("CSV export shows a formula-like value as text", async ({
+    browser,
+  }) => {
+    // Starts with "=", so a spreadsheet would run it as a formula unless the
+    // export neutralizes it. Still contains "E2E-" for cleanup.
+    const marker = `=E2E-${Date.now()}`;
+    const { context, page } = await openSearch(
+      browser,
+      "/youth-population",
+      marker,
+    );
+    await createRecord(page, marker);
+
+    const res = await context.request.get(
+      "/api/export/youth-population?format=csv",
+    );
+    const line = (await res.text())
+      .split("\n")
+      .find((row) => row.includes(marker.slice(1)));
+    expect(line).toBeDefined();
+    expect(line!.startsWith(`'${marker},`)).toBe(true);
+    await context.close();
+  });
+
   test("delete rejects a malformed id", async ({ browser }) => {
     const marker = `E2E-${Date.now()}`;
     const { context, page, rows } = await openSearch(
