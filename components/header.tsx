@@ -8,12 +8,12 @@ import { Suspense } from "react";
 import { Skeleton } from "./ui/skeleton";
 import { UserProfileWrapper } from "./user-profile-wrapper";
 
-export function Header() {
+export function Header({ isAdmin }: { isAdmin: boolean }) {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background px-6">
       <SidebarTrigger className="cursor-pointer" />
       <div className="flex flex-1 items-center gap-4">
-        <GlobalSearch />
+        <GlobalSearch isAdmin={isAdmin} />
       </div>
       <div className="flex items-center gap-2">
         <ThemeToggle />

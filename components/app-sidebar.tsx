@@ -125,12 +125,17 @@ const navigationItems = [
     url: "/user-management",
     icon: UserCircle,
     iconColor: "text-gray-500",
+    // Only shown to admins; the page itself also refuses everyone else.
+    adminOnly: true,
   },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
   const { open } = useSidebar();
+  const visibleItems = navigationItems.filter(
+    (item) => isAdmin || !item.adminOnly,
+  );
 
   return (
     <Sidebar collapsible="icon">
@@ -169,7 +174,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navigationItems.map((item) => (
+              {visibleItems.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={pathname === item.url}>
                     <Link href={item.url} className="flex items-center gap-2">

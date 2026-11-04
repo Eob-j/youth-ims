@@ -21,6 +21,8 @@ interface SearchResult {
   url: string
   icon: React.ReactNode
   category: string
+  // Only listed for admins; the page itself also refuses everyone else.
+  adminOnly?: boolean
 }
 
 const searchablePages: SearchResult[] = [
@@ -128,10 +130,11 @@ const searchablePages: SearchResult[] = [
     url: "/user-management",
     icon: <Users className="h-4 w-4" />,
     category: "System",
+    adminOnly: true,
   },
 ]
 
-export function GlobalSearch() {
+export function GlobalSearch({ isAdmin = false }: { isAdmin?: boolean }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const router = useRouter()
@@ -159,9 +162,10 @@ export function GlobalSearch() {
 
   const filteredResults = searchablePages.filter(
     (page) =>
-      page.title.toLowerCase().includes(query.toLowerCase()) ||
-      page.description.toLowerCase().includes(query.toLowerCase()) ||
-      page.category.toLowerCase().includes(query.toLowerCase()),
+      (isAdmin || !page.adminOnly) &&
+      (page.title.toLowerCase().includes(query.toLowerCase()) ||
+        page.description.toLowerCase().includes(query.toLowerCase()) ||
+        page.category.toLowerCase().includes(query.toLowerCase())),
   )
 
   const groupedResults = filteredResults.reduce(
