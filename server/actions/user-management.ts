@@ -1,6 +1,5 @@
 "use server";
 
-import crypto from "crypto";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { getServerSideSession } from "@/lib/auth-helper";
@@ -8,9 +7,13 @@ import { fail, ok } from "@/lib/action-result-helper";
 import { headers } from "next/headers";
 import { Role } from "@/lib/types";
 import { db } from "@/db";
-import { users, verifications } from "@/auth-schema";
+import { users } from "@/auth-schema";
 import { env } from "@/env";
 import { generatePassword } from "@/lib/generate-password";
+import {
+  createInviteToken,
+  getOrCreateInviteToken,
+} from "@/lib/invite-tokens";
 import { transporter } from "@/lib/nodemailer/client";
 import { invalidInput } from "@/lib/validations/action-input";
 import { userSchema } from "@/lib/validations/user-management";
@@ -52,10 +55,10 @@ export async function createUser(input: CreateUserInput) {
       headers: requestHeaders,
     });
 
-    const tokenData = await generateAndStoreToken({ userId: newUser.user.id });
+    const token = await createInviteToken(newUser.user.id);
     await sendInviteEmail({
       email: newUser.user.email,
-      token: tokenData.value,
+      token,
       name: newUser.user.name,
     });
 
@@ -134,13 +137,12 @@ export async function updateUser(input: UpdateUserInput) {
 
     if (emailChanged) {
       try {
-        await db
-          .delete(verifications)
-          .where(eq(verifications.identifier, data.id));
-        const token = await generateAndStoreToken({ userId: data.id });
+        // Replaces the old invite, so a link sent to the old address stops
+        // working.
+        const token = await createInviteToken(data.id);
         await sendInviteEmail({
           email: data.email,
-          token: token.value,
+          token,
           name: data.name,
         });
       } catch (error) {
@@ -307,20 +309,6 @@ export async function sendPasswordResetEmail(userId: string) {
   }
 }
 
-async function generateAndStoreToken({ userId }: { userId: string }) {
-  const tokenSecret = crypto.randomBytes(32).toString("hex");
-  const tokenExpires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours
-  const data = await db
-    .insert(verifications)
-    .values({
-      identifier: userId,
-      value: tokenSecret,
-      expiresAt: tokenExpires,
-      id: crypto.randomBytes(32).toString("hex"),
-    })
-    .returning();
-  return data[0];
-}
 
 async function sendInviteEmail({
   email,
@@ -333,7 +321,8 @@ async function sendInviteEmail({
 }) {
   // Same base URL as Better Auth's reset links, so one setting controls both.
   const baseUrl = env.BETTER_AUTH_URL.replace(/\/+$/, "");
-  const verifyUrl = `${baseUrl}/api/verify-email?token=${token}`;
+  // Opens a page with a confirm button; the link alone verifies nothing.
+  const verifyUrl = `${baseUrl}/verify-email?token=${token}`;
 
   await transporter.sendMail({
     from: `${env.EMAIL_SENDER_NAME} <${env.GMAIL_USER}>`,
@@ -371,23 +360,11 @@ export async function retrySendInviteEmail(userId: string) {
       return fail("User not found.");
     }
 
-    // check if the user has an associated token
-    let [record] = await db
-      .select()
-      .from(verifications)
-      .where(eq(verifications.identifier, userId))
-      .limit(1);
-    // check if the token is expired
-    if (!record || record.expiresAt < new Date()) {
-      await db
-        .delete(verifications)
-        .where(eq(verifications.identifier, userId))
-        .returning();
-      record = await generateAndStoreToken({ userId });
-    }
+    // Resend the current invite if it is still valid, otherwise a new one.
+    const token = await getOrCreateInviteToken(userId);
     await sendInviteEmail({
       email: user.email,
-      token: record.value,
+      token,
       name: user.name,
     });
     return ok("Invitation sent successfully.");
