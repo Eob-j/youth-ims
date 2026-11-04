@@ -154,6 +154,7 @@ export function DataTable<TData, TValue>({
       <div className="flex items-center justify-between py-4 gap-4">
         {searchKey && (
           <Input
+            aria-label="Search table"
             placeholder={searchPlaceholder}
             value={
               (table.getColumn(searchKey)?.getFilterValue() as string) ?? ""
@@ -237,33 +238,48 @@ export function DataTable<TData, TValue>({
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
+                  const canSort = header.column.getCanSort();
+                  const sorted = header.column.getIsSorted();
+                  const content = flexRender(
+                    header.column.columnDef.header,
+                    header.getContext(),
+                  );
                   return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder ? null : (
-                        <div
-                          className={
-                            header.column.getCanSort()
-                              ? "flex items-center gap-2 cursor-pointer select-none"
-                              : ""
-                          }
+                    <TableHead
+                      key={header.id}
+                      // Tells screen readers how the column is sorted.
+                      aria-sort={
+                        !canSort
+                          ? undefined
+                          : sorted === "asc"
+                            ? "ascending"
+                            : sorted === "desc"
+                              ? "descending"
+                              : "none"
+                      }
+                    >
+                      {header.isPlaceholder ? null : canSort ? (
+                        // A real button, so sorting works with Tab and
+                        // Enter/Space as well as the mouse.
+                        <button
+                          type="button"
+                          className="-ml-2 flex items-center gap-2 rounded-md px-2 py-1 select-none hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           onClick={header.column.getToggleSortingHandler()}
                         >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
+                          {content}
+                          {sorted === "asc" ? (
+                            <ArrowUp className="h-4 w-4" aria-hidden />
+                          ) : sorted === "desc" ? (
+                            <ArrowDown className="h-4 w-4" aria-hidden />
+                          ) : (
+                            <ArrowUpDown
+                              className="h-4 w-4 opacity-50"
+                              aria-hidden
+                            />
                           )}
-                          {header.column.getCanSort() && (
-                            <div className="flex flex-col">
-                              {header.column.getIsSorted() === "asc" ? (
-                                <ArrowUp className="h-4 w-4" />
-                              ) : header.column.getIsSorted() === "desc" ? (
-                                <ArrowDown className="h-4 w-4" />
-                              ) : (
-                                <ArrowUpDown className="h-4 w-4 opacity-50" />
-                              )}
-                            </div>
-                          )}
-                        </div>
+                        </button>
+                      ) : (
+                        content
                       )}
                     </TableHead>
                   );

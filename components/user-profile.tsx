@@ -38,7 +38,11 @@ export function UserProfile({ currentUser }: { currentUser: CurrentUser }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+        <Button
+          variant="ghost"
+          className="relative h-10 w-10 rounded-full"
+          aria-label={`Account menu for ${currentUser.name || "your account"}`}
+        >
           <Avatar className="h-10 w-10 cursor-pointer">
             <AvatarFallback className="bg-blue-500 text-white font-semibold">
               {getInitials(currentUser.name)}

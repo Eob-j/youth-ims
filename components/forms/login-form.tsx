@@ -143,11 +143,16 @@ export function LoginForm({
                         type="button"
                         className="self-end text-sm text-blue-600 hover:underline"
                         onClick={() => setShowForgotPassword((prev) => !prev)}
+                        aria-expanded={showForgotPassword}
+                        aria-controls="forgot-password-help"
                       >
                         Forgot password?
                       </button>
                       {showForgotPassword && (
-                        <p className="rounded-md bg-blue-50 p-3 text-sm text-gray-700">
+                        <p
+                          id="forgot-password-help"
+                          className="rounded-md bg-blue-50 p-3 text-sm text-gray-700"
+                        >
                           Please contact your system administrator to reset
                           your password. They will send you an email with a
                           link to choose a new one.
