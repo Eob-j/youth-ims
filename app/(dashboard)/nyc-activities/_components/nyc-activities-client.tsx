@@ -6,9 +6,25 @@ import { Building2, Calendar, Globe, PieChart, TrendingUp } from "lucide-react";
 import { NycActivitiesActions } from "./nyc-activities-actions";
 import { NycActivitiesAnalytics } from "./nyc-activities-analytics";
 import { NycActivitiesDialogs } from "./nyc-activities-dialogs";
-import { NycActivitiesOrganizations } from "./nyc-activities-organizations";
+import dynamic from "next/dynamic";
 import { NycActivitiesOverview } from "./nyc-activities-overview";
 import { NycActivitiesTable } from "./nyc-activities-table";
+
+// The organisations tab includes a ~50 KB list of registered organisations,
+// so its code is only downloaded when the tab is first opened.
+const NycActivitiesOrganizations = dynamic(
+  () =>
+    import("./nyc-activities-organizations").then(
+      (mod) => mod.NycActivitiesOrganizations,
+    ),
+  {
+    loading: () => (
+      <p className="py-10 text-center text-sm text-muted-foreground">
+        Loading organisations…
+      </p>
+    ),
+  },
+);
 
 interface NycActivitiesClientProps {
   data: NycActivitiesType[];
