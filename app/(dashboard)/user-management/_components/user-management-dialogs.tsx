@@ -232,9 +232,12 @@ function UserEditDialog() {
       role: data.role,
     });
     if (res.success) {
-      toast.success("User edited successfully.", {
-        richColors: true,
-      });
+      toast.success(
+        res.data.emailChanged
+          ? "User edited. The new email must be verified: an invite was sent to it."
+          : "User edited successfully.",
+        { richColors: true },
+      );
       form.reset();
       setEditOpen(false);
     } else {

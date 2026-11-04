@@ -103,20 +103,55 @@ export async function updateUser(input: UpdateUserInput) {
   }
 
   try {
-    const updatedUser = await auth.api.adminUpdateUser({
+    const [current] = await db
+      .select({ email: users.email })
+      .from(users)
+      .where(eq(users.id, data.id))
+      .limit(1);
+
+    if (!current) {
+      return fail("User not found.");
+    }
+
+    // A new address has not been confirmed, so the user must verify it again
+    // (which also keeps them out until they do).
+    const emailChanged =
+      current.email.toLowerCase() !== data.email.toLowerCase();
+
+    await auth.api.adminUpdateUser({
       body: {
         userId: data.id,
         data: {
           name: data.name,
           email: data.email,
           role: data.role as Role,
+          ...(emailChanged && { emailVerified: false }),
         },
       },
       headers: await headers(),
     });
-
     revalidatePath("/user-management");
-    return ok(updatedUser);
+
+    if (emailChanged) {
+      try {
+        await db
+          .delete(verifications)
+          .where(eq(verifications.identifier, data.id));
+        const token = await generateAndStoreToken({ userId: data.id });
+        await sendInviteEmail({
+          email: data.email,
+          token: token.value,
+          name: data.name,
+        });
+      } catch (error) {
+        console.error(error);
+        return fail(
+          "User updated, but the invite email to the new address could not be sent. Use Send Invite to try again.",
+        );
+      }
+    }
+
+    return ok({ emailChanged });
   } catch (error) {
     console.error(error);
     return fail("An error occurred while updating the user.");
