@@ -131,10 +131,17 @@ export function DataImportDialog({
       const response = await serverActionHander(formData);
 
       if (response.success) {
-        toast("Import successful", {
-          description: `Inserted ${response.inserted} records`,
-          richColors: true,
-        });
+        const skipped = response.failed ?? 0;
+        if (skipped > 0) {
+          // Some rows were left out, so flag it rather than call it a success.
+          toast.warning("Import finished with skipped rows", {
+            description: `Imported ${response.inserted} records. ${skipped} row${skipped === 1 ? " was" : "s were"} skipped because of missing or invalid values.`,
+          });
+        } else {
+          toast.success("Import successful", {
+            description: `Imported ${response.inserted} records.`,
+          });
+        }
         setOpen(false);
         reset();
         onImportComplete?.();

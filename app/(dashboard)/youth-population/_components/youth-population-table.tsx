@@ -33,7 +33,7 @@ export function YouthPopulationTable({
     }));
     const res = await bulkDeleteYouthPopulation(records);
     if (res.success) {
-      toast("Success", {
+      toast.success("Success", {
         description: `${res.deleted} record${res.deleted === 1 ? "" : "s"} deleted successfully.`,
         richColors: true,
       });

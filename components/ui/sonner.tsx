@@ -17,6 +17,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      // Colour every toast by its type: success green, error red, warning
+      // amber, info blue. Plain toast() calls stay neutral.
+      richColors
       icons={{
         success: <CircleCheckIcon className="size-4" />,
         info: <InfoIcon className="size-4" />,
