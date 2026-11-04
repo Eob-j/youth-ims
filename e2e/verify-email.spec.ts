@@ -21,9 +21,7 @@ test.describe("email verification link", () => {
   }) => {
     await page.goto(`/verify-email?token=${unknownToken}`);
     await expect(page).toHaveURL(/\/verify-email/);
-    await expect(
-      page.getByRole("heading", { name: "Confirm your email" }),
-    ).toBeVisible();
+    await expect(page.getByText("Welcome to Youth IMS")).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Confirm my email" }),
     ).toBeVisible();

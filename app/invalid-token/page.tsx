@@ -1,26 +1,26 @@
+import {
+  AuthCard,
+  AuthLayout,
+  authButtonClass,
+} from "@/components/auth-layout";
+import { Button } from "@/components/ui/button";
+import { TriangleAlert } from "lucide-react";
 import Link from "next/link";
 
 export default function InvalidTokenPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 via-red-50 to-orange-50 p-6">
-      <div className="max-w-xl w-full bg-white rounded-lg shadow-lg p-8 text-center">
-        <h1 className="text-2xl font-bold mb-4 text-red-600">
-          Invalid or Expired Link
-        </h1>
-        <p className="text-gray-700 mb-6">
-          The verification link you clicked is invalid or has expired. For
-          security reasons, verification tokens are only valid for a limited
-          time.
-        </p>
-        <div className="flex justify-center gap-4">
-          <Link
-            href="/login"
-            className="inline-block rounded bg-blue-600 text-white px-5 py-2.5 hover:bg-blue-700 transition-colors"
-          >
-            Back to Login
-          </Link>
-        </div>
-      </div>
-    </div>
+    <AuthLayout>
+      <AuthCard
+        icon={TriangleAlert}
+        tone="error"
+        title="This link is invalid or has expired"
+        description="Invite links work only once and expire after 24 hours. If you've already confirmed your email, you can sign in."
+        footer="Need a new link? Ask your system administrator to send you a new invite."
+      >
+        <Button asChild className={authButtonClass}>
+          <Link href="/login">Go to sign in</Link>
+        </Button>
+      </AuthCard>
+    </AuthLayout>
   );
 }

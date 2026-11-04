@@ -1,23 +1,26 @@
+import {
+  AuthCard,
+  AuthLayout,
+  authButtonClass,
+} from "@/components/auth-layout";
+import { Button } from "@/components/ui/button";
+import { CircleCheck } from "lucide-react";
 import Link from "next/link";
 
 export default function EmailVerifiedPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
-      <div className="max-w-xl w-full bg-white rounded-lg shadow-lg p-8 text-center">
-        <h1 className="text-2xl font-bold mb-4">Email Verified</h1>
-        <p className="text-gray-700 mb-6">
-          Thank you — your email address has been successfully verified. You can
-          now sign in and access your dashboard.
-        </p>
-        <div className="flex justify-center gap-4">
-          <Link
-            href="/login"
-            className="inline-block rounded bg-blue-600 text-white px-5 py-2.5"
-          >
-            Sign in
-          </Link>
-        </div>
-      </div>
-    </div>
+    <AuthLayout>
+      <AuthCard
+        icon={CircleCheck}
+        tone="success"
+        title="Email confirmed"
+        description="Your account is now active. Sign in with your email and the password your administrator gave you."
+        footer="For your security, change your password after signing in, under Profile → Security."
+      >
+        <Button asChild className={authButtonClass}>
+          <Link href="/login">Sign in</Link>
+        </Button>
+      </AuthCard>
+    </AuthLayout>
   );
 }
