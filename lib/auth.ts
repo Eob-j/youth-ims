@@ -9,6 +9,7 @@ import { ac, admin, data_entry, viewer } from "./permissions";
 
 import { VerifyEmail } from "@/components/emails/verify-email";
 import { env } from "@/env";
+import { escapeHtml } from "@/lib/escape-html";
 import { transporter } from "@/lib/nodemailer/client";
 import { Resend } from "resend";
 
@@ -54,7 +55,7 @@ export const auth = betterAuth({
         to: user.email,
         subject: "Reset your Youth IMS password",
         html: `
-          <p>Hi ${user.name},</p>
+          <p>Hi ${escapeHtml(user.name)},</p>
           <p>An administrator has requested a password reset for your account.</p>
           <a href="${url}">Click here to choose a new password</a>
           <p>This link expires in 1 hour. If you did not expect this, please contact your administrator.</p>

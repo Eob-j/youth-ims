@@ -9,6 +9,7 @@ import { Role } from "@/lib/types";
 import { db } from "@/db";
 import { users } from "@/auth-schema";
 import { env } from "@/env";
+import { escapeHtml } from "@/lib/escape-html";
 import { generatePassword } from "@/lib/generate-password";
 import {
   createInviteToken,
@@ -329,7 +330,7 @@ async function sendInviteEmail({
     to: email,
     subject: "You have been invited to join the Gambia Youth Data Dashboard",
     html: `
-    <p>Hi ${name}, you've been invited to join the platform.</p>
+    <p>Hi ${escapeHtml(name)}, you've been invited to join the platform.</p>
     <a href="${verifyUrl}">Click here to verify your email & get started</a>
     <p>This link expires in 24 hours.</p>
   `, // HTML version of the message
