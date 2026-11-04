@@ -154,6 +154,25 @@ test.describe("admin cannot lock themselves out", () => {
     expect(await ownRole()).toBe("admin");
   });
 
+  test("saving without changing the email keeps it verified", async () => {
+    // Changing the email sends a real invite, so only the unchanged case is
+    // covered here.
+    const { page, row } = await ownRow();
+    await row.getByRole("button").click();
+    await page.getByRole("menuitem", { name: "Edit" }).click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Update User" })
+      .click();
+
+    await expect(page.getByText("User edited successfully.")).toBeVisible();
+    const [account] = await queryDb(
+      "select role, email_verified from users where email = $1",
+      [adminCredentials.email],
+    );
+    expect(account).toEqual({ role: "admin", email_verified: true });
+  });
+
   test("cannot delete their own account", async () => {
     const { page, row } = await ownRow();
     await row.getByRole("button").click();
