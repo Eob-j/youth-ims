@@ -13,12 +13,14 @@ export const passwordForm = z
     path: ["confirmPassword"], // path of error
   });
 
-export const userSchema = z
-  .object({
-    name: z.string().min(1, "Name is required"),
-    email: z.string().min(1, "Email is required"),
-    role: z.string().min(1, "Role is required"),
-  })
-  .and(passwordForm);
+export const ROLES = ["admin", "data_entry", "viewer"] as const;
+
+// New users get a generated password, so the form has no password fields.
+// Also used by the createUser action to validate its input.
+export const userSchema = z.object({
+  name: z.string().trim().min(1, "Name is required"),
+  email: z.email("Enter a valid email address"),
+  role: z.enum(ROLES, { message: "Role is required" }),
+});
 
 export type userSchemaType = z.infer<typeof userSchema>;

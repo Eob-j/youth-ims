@@ -10,18 +10,18 @@ import { Role } from "@/lib/types";
 import { db } from "@/db";
 import { users, verifications } from "@/auth-schema";
 import { env } from "@/env";
+import { generatePassword } from "@/lib/generate-password";
 import { transporter } from "@/lib/nodemailer/client";
+import { invalidInput } from "@/lib/validations/action-input";
+import { userSchema } from "@/lib/validations/user-management";
 import { eq } from "drizzle-orm";
+import z from "zod";
 
-type CreateUserInput = {
-  name: string;
-  email: string;
-  role: string;
-  password: string;
-  confirmPassword: string;
-};
+type CreateUserInput = z.infer<typeof userSchema>;
 
-export async function createUser(data: CreateUserInput) {
+// Creates the user with a generated password and returns it once, so the
+// admin can pass it on. It is not stored anywhere in plain text.
+export async function createUser(input: CreateUserInput) {
   const session = await getServerSideSession();
 
   if (!session) {
@@ -32,13 +32,20 @@ export async function createUser(data: CreateUserInput) {
     return fail("Unauthorized");
   }
 
+  const parsed = userSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail(invalidInput(parsed.error));
+  }
+  const data = parsed.data;
+
   try {
     const requestHeaders = await headers();
+    const password = generatePassword();
 
     const newUser = await auth.api.createUser({
       body: {
         email: data.email,
-        password: data.password,
+        password,
         name: data.name,
         role: data.role as Role,
       },
@@ -53,7 +60,7 @@ export async function createUser(data: CreateUserInput) {
     });
 
     revalidatePath("/user-management");
-    return ok(newUser);
+    return ok({ email: newUser.user.email, password });
   } catch (error) {
     console.error(error);
     return fail("An error occurred while creating the user.");

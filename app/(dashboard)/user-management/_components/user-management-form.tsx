@@ -89,43 +89,6 @@ export function UserManagementForm() {
           </Field>
         )}
       />
-
-      <Controller
-        name="password"
-        control={control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="password">Password</FieldLabel>
-            <Input
-              {...field}
-              id="password"
-              type="password"
-              onChange={(e) => field.onChange(e.target.value)}
-            />
-            {fieldState.error && (
-              <FieldError>{fieldState.error.message}</FieldError>
-            )}
-          </Field>
-        )}
-      />
-      <Controller
-        name="confirmPassword"
-        control={control}
-        render={({ field, fieldState }) => (
-          <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor="confirmPassword">Confirm Password</FieldLabel>
-            <Input
-              {...field}
-              id="confirmPassword"
-              type="password"
-              onChange={(e) => field.onChange(e.target.value)}
-            />
-            {fieldState.error && (
-              <FieldError>{fieldState.error.message}</FieldError>
-            )}
-          </Field>
-        )}
-      />
     </div>
   );
 }

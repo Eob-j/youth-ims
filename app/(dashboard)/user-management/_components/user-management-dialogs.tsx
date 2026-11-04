@@ -31,7 +31,9 @@ import {
   sendPasswordResetEmail,
   updateUser,
 } from "@/server/actions/user-management";
-import { Loader } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Copy, Loader } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { UserManagementUpdateForm } from "./user-management-update-form";
 
@@ -47,16 +49,18 @@ export function UserManagementDialogs() {
   );
 }
 
+type Credentials = { email: string; password: string };
+
 function UserCreateDialog() {
   const { createOpen, setCreateOpen } = useUserManagementStore();
+  // The generated password, shown once after the user is created.
+  const [credentials, setCredentials] = useState<Credentials | null>(null);
   const form = useForm<z.infer<typeof userSchema>>({
     resolver: zodResolver(userSchema),
     defaultValues: {
       name: "",
       email: "",
-      role: "",
-      password: "",
-      confirmPassword: "",
+      role: undefined,
     },
   });
   async function onSubmit(data: z.infer<typeof userSchema>) {
@@ -67,43 +71,136 @@ function UserCreateDialog() {
       });
       form.reset();
       setCreateOpen(false);
+      setCredentials(res.data);
     } else {
+      // Keep what was typed so the admin can fix it and try again.
       toast.error(res.error, {
         richColors: true,
       });
     }
-
-    form.reset();
   }
 
   return (
-    <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+    <>
+      <UserCredentialsDialog
+        credentials={credentials}
+        onClose={() => setCredentials(null)}
+      />
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="sm:max-w-125">
+          <FormProvider {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <DialogHeader>
+                <DialogTitle>Add New User</DialogTitle>
+                <DialogDescription>
+                  Create a new user account with specific role permissions.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <UserManagementForm />
+              </div>
+              <DialogFooter>
+                <Button type="submit" disabled={form.formState.isSubmitting}>
+                  {form.formState.isSubmitting ? (
+                    <div className="flex items-center">
+                      <Loader className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </div>
+                  ) : (
+                    "Save User"
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </FormProvider>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function CopyField({ label, value }: { label: string; value: string }) {
+  const id = `credentials-${label.toLowerCase()}`;
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={id}>{label}</Label>
+      <div className="flex gap-2">
+        <Input id={id} value={value} readOnly className="font-mono" />
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          aria-label={`Copy ${label.toLowerCase()}`}
+          onClick={() => copyToClipboard(value, `${label} copied.`)}
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+async function copyToClipboard(text: string, message: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success(message, { richColors: true });
+  } catch {
+    toast.error("Could not copy. Select the text and copy it instead.", {
+      richColors: true,
+    });
+  }
+}
+
+function UserCredentialsDialog({
+  credentials,
+  onClose,
+}: {
+  credentials: Credentials | null;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog
+      open={credentials !== null}
+      onOpenChange={(open) => !open && onClose()}
+    >
       <DialogContent className="sm:max-w-125">
-        <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <DialogHeader>
-              <DialogTitle>Add New User</DialogTitle>
-              <DialogDescription>
-                Create a new user account with specific role permissions.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <UserManagementForm />
-            </div>
-            <DialogFooter>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? (
-                  <div className="flex items-center">
-                    <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </div>
-                ) : (
-                  "Save User"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </FormProvider>
+        <DialogHeader>
+          <DialogTitle>User created</DialogTitle>
+          <DialogDescription>
+            Share these sign-in details with the user. The password is shown
+            only once and can&apos;t be viewed again after you close this.
+          </DialogDescription>
+        </DialogHeader>
+        {credentials && (
+          <div className="grid gap-4 py-2">
+            <CopyField label="Email" value={credentials.email} />
+            <CopyField label="Password" value={credentials.password} />
+            <p className="text-sm text-muted-foreground">
+              An invite email has been sent. The user must verify their email
+              before signing in, and can change this password under Profile →
+              Security.
+            </p>
+          </div>
+        )}
+        <DialogFooter className="gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() =>
+              credentials &&
+              copyToClipboard(
+                `Email: ${credentials.email}\nPassword: ${credentials.password}`,
+                "Email and password copied.",
+              )
+            }
+          >
+            <Copy className="mr-2 h-4 w-4" />
+            Copy both
+          </Button>
+          <Button type="button" onClick={onClose}>
+            Done
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
