@@ -54,7 +54,7 @@ export const getColumns = ({
       accessorKey: "emailVerified",
       header: "Email Verified",
       cell: ({ row }) => {
-        const emailVerified = row.getValue("emailVerified") as Boolean;
+        const emailVerified = row.getValue("emailVerified") as boolean;
         return (
           <Badge variant={emailVerified ? "default" : "destructive"}>
             {emailVerified ? "True" : "False"}

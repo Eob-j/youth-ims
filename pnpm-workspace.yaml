@@ -1,8 +1,8 @@
 allowBuilds:
-  '@prisma/engines': true
+  '@prisma/engines': false
   core-js: true
   esbuild: true
   msw: true
-  prisma: true
+  prisma: false
   sharp: true
   unrs-resolver: true
