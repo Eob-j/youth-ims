@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { parseSpreadsheet } from "./parse-file";
+import { readImportFile } from "./parse-file";
 import { mapHeaders, processColumns } from "./column-processing";
 import { ImportConfig } from "./types";
 import { revalidatePath } from "next/cache";
@@ -17,21 +17,11 @@ export async function importSpreadsheet<T>({
   context?: any;
   path: string;
 }) {
-  if (!file) {
-    return { success: false, error: "No file provided" };
+  const read = await readImportFile(file);
+  if ("error" in read) {
+    return { success: false, error: read.error };
   }
-
-  const allowed = ["xlsx", "xls", "xlsm", "csv"];
-
-  const extension = file.name.split(".").pop()?.toLowerCase();
-
-  if (!extension || !allowed.includes(extension)) {
-    return { success: false, error: "Unsupported file type" };
-  }
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-
-  const rawRows = parseSpreadsheet(buffer, file.name);
+  const rawRows = read.rows;
 
   const validRows: any[] = [];
   const errors: any[] = [];

@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { nycActivities } from "@/db/schema";
 import { fail, ok } from "@/lib/action-result-helper";
 import { getEditorSession } from "@/lib/auth-helper";
-import { parseSpreadsheet } from "@/lib/importer/parse-file";
+import { readImportFile } from "@/lib/importer/parse-file";
 import { nycActivityImportSchema } from "@/lib/validations/nyc-activities";
 import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -215,19 +215,11 @@ export async function importNycActivitiesData(formData: FormData) {
     return { success: false, error: "Unauthorized" };
   }
 
-  const file = formData.get("file") as File;
-  if (!file) {
-    return { success: false, error: "No file provided" };
+  const read = await readImportFile(formData.get("file"));
+  if ("error" in read) {
+    return { success: false, error: read.error };
   }
-
-  const ext = file.name.split(".").pop()?.toLowerCase();
-  const allowed = ["xlsx", "xls", "xlsm", "csv"];
-  if (!ext || !allowed.includes(ext)) {
-    return { success: false, error: "Unsupported file type" };
-  }
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const rawRows = parseSpreadsheet(buffer, file.name);
+  const rawRows = read.rows;
   const validRows: z.infer<typeof nycActivityImportSchema>[] = [];
   const errors: unknown[] = [];
 

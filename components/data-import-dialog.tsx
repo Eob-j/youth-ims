@@ -15,6 +15,11 @@ import { CheckCircle, FileSpreadsheet, Upload, XCircle } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Label } from "./ui/label";
+import {
+  MAX_IMPORT_FILE_BYTES,
+  MAX_IMPORT_FILE_MB,
+  MAX_IMPORT_ROWS,
+} from "@/lib/importer/limits";
 
 interface ImportResult {
   success: boolean;
@@ -93,6 +98,16 @@ export function DataImportDialog({
         description: "Supported formats: CSV, XLSX, XLS, XLSM",
         richColors: true,
       });
+      return;
+    }
+
+    // Refuse here rather than after a long upload; the server checks too.
+    if (selectedFile.size > MAX_IMPORT_FILE_BYTES) {
+      toast.error("File too large", {
+        description: `The maximum is ${MAX_IMPORT_FILE_MB} MB. Split the file into smaller files.`,
+        richColors: true,
+      });
+      e.target.value = "";
       return;
     }
 
@@ -175,6 +190,10 @@ export function DataImportDialog({
             <FileSpreadsheet className="mr-2 h-4 w-4" />
             {file ? file.name : "Choose an CSV file"}
           </Button>
+          <p className="text-xs text-muted-foreground">
+            Up to {MAX_IMPORT_FILE_MB} MB and{" "}
+            {MAX_IMPORT_ROWS.toLocaleString()} rows per file.
+          </p>
 
           {result && (
             <>
