@@ -158,6 +158,17 @@ test.describe("update and delete actions", () => {
     }
   }
 
+  test("a search with no matches says No entries", async ({ browser }) => {
+    const { context, page } = await openSearch(
+      browser,
+      "/youth-population",
+      "zzz-no-such-lga",
+    );
+    await expect(page.getByText("No entries")).toBeVisible();
+    await expect(page.getByText(/Showing 1 to 0/)).toHaveCount(0);
+    await context.close();
+  });
+
   // Input validation: the actions check what they are sent, not just the
   // form. Each test changes the real request after the form submits it.
   const youthPopulationRows = (marker: string) =>

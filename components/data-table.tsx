@@ -305,6 +305,8 @@ export function DataTable<TData, TValue>({
               {selectedCount} of {table.getFilteredRowModel().rows.length}{" "}
               row(s) selected
             </span>
+          ) : table.getFilteredRowModel().rows.length === 0 ? (
+            <span>No entries</span>
           ) : (
             <span>
               Showing{" "}

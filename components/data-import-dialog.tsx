@@ -11,7 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { CheckCircle, FileSpreadsheet, Upload, XCircle } from "lucide-react";
+import { FileSpreadsheet, TriangleAlert, Upload, XCircle } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Label } from "./ui/label";
@@ -25,7 +25,7 @@ interface ImportResult {
   success: boolean;
   inserted: number;
   failed: number;
-  errors?: any[];
+  errors?: RowError[];
   error?: string;
 }
 
@@ -64,6 +64,47 @@ interface DataImportDialogProps {
   onImportComplete?: () => void;
   // Optional guidance shown above the file picker, e.g. the required columns.
   instructions?: React.ReactNode;
+}
+
+// A row the import skipped, as returned by the import actions: the file row
+// number and the validation issues per field (z.treeifyError output).
+type RowError = {
+  row: number;
+  issues?: {
+    errors?: string[];
+    properties?: Record<string, { errors?: string[] }>;
+  };
+};
+
+const MAX_LISTED_ROWS = 20;
+
+// "Row 3: lga – expected string, received null"
+function describeRowError({ row, issues }: RowError) {
+  const clean = (message: string) => message.replace(/^Invalid input: /, "");
+  const problems = [
+    ...(issues?.errors ?? []).map(clean),
+    ...Object.entries(issues?.properties ?? {}).flatMap(([field, value]) =>
+      (value.errors ?? []).map((message) => `${field} – ${clean(message)}`),
+    ),
+  ];
+  return `Row ${row}: ${problems.join("; ") || "invalid values"}`;
+}
+
+function RowErrors({ errors }: { errors?: RowError[] }) {
+  if (!errors?.length) return null;
+  const hidden = errors.length - MAX_LISTED_ROWS;
+  return (
+    <ul className="mt-2 max-h-40 list-disc space-y-1 overflow-y-auto pl-4 text-xs">
+      {errors.slice(0, MAX_LISTED_ROWS).map((error) => (
+        <li key={error.row}>{describeRowError(error)}</li>
+      ))}
+      {hidden > 0 && (
+        <li>
+          …and {hidden} more row{hidden === 1 ? "" : "s"}
+        </li>
+      )}
+    </ul>
+  );
 }
 
 export function DataImportDialog({
@@ -133,22 +174,27 @@ export function DataImportDialog({
       if (response.success) {
         const skipped = response.failed ?? 0;
         if (skipped > 0) {
-          // Some rows were left out, so flag it rather than call it a success.
+          // Some rows were left out: keep the dialog open listing them, so
+          // they can be fixed and imported again.
           toast.warning("Import finished with skipped rows", {
             description: `Imported ${response.inserted} records. ${skipped} row${skipped === 1 ? " was" : "s were"} skipped because of missing or invalid values.`,
           });
+          setFile(null);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+          setResult(response as ImportResult);
         } else {
           toast.success("Import successful", {
             description: `Imported ${response.inserted} records.`,
           });
+          setOpen(false);
+          reset();
         }
-        setOpen(false);
-        reset();
         onImportComplete?.();
       } else {
         toast.error("Import Error", {
           description: `${response.error}`,
         });
+        setResult(response as ImportResult);
       }
     });
   };
@@ -202,33 +248,25 @@ export function DataImportDialog({
             {MAX_IMPORT_ROWS.toLocaleString()} rows per file.
           </p>
 
-          {result && (
-            <>
-              {result.success ? (
-                <Alert className="bg-green-50 border-green-200">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800">
-                    Successfully inserted {result.inserted} records
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                <Alert variant="destructive">
-                  <XCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    {result.error ?? "Import failed"}
-                    {result.errors && result.errors.length > 0 && (
-                      <details className="mt-2 text-xs">
-                        <summary>View validation errors</summary>
-                        <pre className="mt-2 whitespace-pre-wrap">
-                          {JSON.stringify(result.errors.slice(0, 10), null, 2)}
-                        </pre>
-                      </details>
-                    )}
-                  </AlertDescription>
-                </Alert>
-              )}
-            </>
-          )}
+          {result &&
+            (result.success ? (
+              <Alert className="border-amber-200 bg-amber-50 text-amber-900">
+                <TriangleAlert className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-900">
+                  Imported {result.inserted} records. These rows were skipped;
+                  fix them and import them again:
+                  <RowErrors errors={result.errors} />
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <Alert variant="destructive">
+                <XCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {result.error ?? "Import failed"}
+                  <RowErrors errors={result.errors} />
+                </AlertDescription>
+              </Alert>
+            ))}
         </div>
 
         <DialogFooter>

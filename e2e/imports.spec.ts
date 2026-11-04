@@ -79,9 +79,25 @@ test.describe("import limits", () => {
     await page.locator('input[type="file"]').setInputFiles(medium);
     await page.getByRole("button", { name: "Import", exact: true }).click();
 
-    await expect(page.getByText("No valid rows found")).toBeVisible({
+    await expect(page.getByRole("dialog").getByText("No valid rows found")).toBeVisible({
       timeout: 60_000,
     });
+  });
+
+  test("a failed import lists the rows that were rejected", async () => {
+    const page = await openImport();
+    // Known headers, no LGA and a non-numeric population: invalid, so nothing
+    // is inserted. (A row with every value blank is skipped by the parser.)
+    const invalid = csv(
+      "e2e-invalid.csv",
+      "LGA,Total Population,Male Youth,Female Youth,Urban Youth,Rural Youth,Year\n,not-a-number,1,1,1,1,2024\n",
+    );
+    await page.locator('input[type="file"]').setInputFiles(invalid);
+    await page.getByRole("button", { name: "Import", exact: true }).click();
+
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByText("No valid rows found")).toBeVisible();
+    await expect(dialog.getByText(/^Row 2: .*lga/)).toBeVisible();
   });
 
   test("the server refuses more than 10,000 rows", async () => {
@@ -93,7 +109,9 @@ test.describe("import limits", () => {
     await page.locator('input[type="file"]').setInputFiles(many);
     await page.getByRole("button", { name: "Import", exact: true }).click();
 
-    await expect(page.getByText(/The maximum is 10,000 per import/)).toBeVisible();
+    await expect(
+      page.getByRole("dialog").getByText(/The maximum is 10,000 per import/),
+    ).toBeVisible();
   });
 });
 
@@ -134,13 +152,15 @@ test.describe("import actions", () => {
 
         // Editor: the action gets past the auth check to validation.
         await importButton.click();
-        await expect(page.getByText("No valid rows found")).toBeVisible();
+        await expect(page.getByRole("dialog").getByText("No valid rows found")).toBeVisible();
 
         // Swap the session and submit again. The dialog stays open on error,
         // so the same file is still selected.
         await swap.apply(context, baseURL!, browser);
         await importButton.click();
-        await expect(page.getByText("Unauthorized")).toBeVisible();
+        // Shown in the toast and in the dialog's error panel. A forged session
+        // can send the page to /login soon after, so accept either.
+        await expect(page.getByText("Unauthorized").first()).toBeVisible();
 
         await page.close();
       });

@@ -4,6 +4,7 @@ import {
   hasCredentials,
   missingCredentialsMessage,
   newLoggedInContext,
+  queryDb,
 } from "./helpers";
 
 const exportRoutes = [
@@ -59,10 +60,37 @@ test.describe("exports with a session", () => {
     expect(res.status()).toBe(200);
     expect(res.headers()["content-type"]).toContain("text/csv");
 
+    // Named after the table and today's date.
+    expect(res.headers()["content-disposition"]).toMatch(
+      /filename="youth-population-\d{4}-\d{2}-\d{2}\.csv"/,
+    );
+
     // Same labels and order as the table in the UI.
     const [headerRow] = (await res.text()).split("\n");
     expect(headerRow.trim()).toBe(
       "LGA,Total Population,Youth Population,Youth Share (%),Male Youth,Female Youth,Urban Youth,Rural Youth,Year",
     );
+  });
+
+  test("an empty table exports just the column headers", async () => {
+    const [{ count }] = await queryDb(
+      "select count(*)::int as count from nyc_participants",
+    );
+    test.skip(count > 0, "NYC participants has data; this needs an empty table.");
+
+    const res = await context.request.get(
+      "/api/export/nyc-participants?format=csv",
+    );
+    expect(res.status()).toBe(200);
+    expect((await res.text()).trim()).toBe(
+      "Name,Age,Gender,Region,Category,Sport,Level,Status,Achievements,Date Registered,Contact",
+    );
+  });
+
+  test("an unknown format is rejected with 400", async () => {
+    const res = await context.request.get(
+      "/api/export/youth-population?format=bogus",
+    );
+    expect(res.status()).toBe(400);
   });
 });

@@ -92,11 +92,6 @@ export function UserProfile({ currentUser }: { currentUser: CurrentUser }) {
                   </span>
                 </div>
               )}
-
-              <div className="flex items-center space-x-1">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-xs text-green-600">Online</span>
-              </div>
             </div>
           </div>
         </DropdownMenuLabel>
